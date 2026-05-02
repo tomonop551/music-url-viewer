@@ -1,0 +1,11 @@
+[tools]
+node = "22"
+pnpm = "latest"
+
+[tasks]
+dev = "pnpm dev"
+build = "pnpm build"
+start = "pnpm start"
+lint = "pnpm lint"
+type-check = "pnpm tsc --noEmit"
+install = "pnpm install"
