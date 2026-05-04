@@ -1,5 +1,8 @@
 import { getMusicUrls } from "@/lib/dynamodb";
 
+// Skip static generation during build to avoid AccessDeniedException in Amplify build environment
+export const dynamic = "force-dynamic";
+
 // Set ISR (Incremental Static Regeneration): 1 day = 86400 seconds
 export const revalidate = 86400;
 
