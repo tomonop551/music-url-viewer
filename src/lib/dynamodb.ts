@@ -39,8 +39,15 @@ export async function getMusicUrls(): Promise<MusicUrlRecord[]> {
     return validItems.sort((a, b) => {
       return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
     });
-  } catch (error) {
-    console.error("Error fetching from DynamoDB:", error);
-    throw new Error("Failed to fetch music URLs");
+  } catch (error: any) {
+    console.error("Error fetching from DynamoDB:", {
+      message: error.message,
+      code: error.name,
+      requestId: error.$metadata?.requestId,
+      stack: error.stack
+    });
+    // Return empty array instead of throwing to prevent page crash (500 error)
+    // This allows the page to render with a "no data" message
+    return [];
   }
 }
