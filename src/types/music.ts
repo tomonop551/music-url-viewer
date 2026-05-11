@@ -3,6 +3,7 @@ export interface MusicUrlRecord {
   url: string;
   user_name: string;
   timestamp: string;
+  title?: string;
 }
 
 // Raw data as received (in case all fields could be optional)
