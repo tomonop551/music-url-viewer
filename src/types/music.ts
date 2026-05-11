@@ -4,7 +4,8 @@ export interface MusicUrlRecord {
   user_name: string;
   timestamp: string;
   title?: string;
+  [key: string]: unknown; // Add this line
 }
 
 // Raw data as received (in case all fields could be optional)
-export type MusicUrlResponseItem = Partial<MusicUrlRecord> & Record<string, any>;
+export type MusicUrlResponseItem = Partial<MusicUrlRecord> & Record<string, unknown>;

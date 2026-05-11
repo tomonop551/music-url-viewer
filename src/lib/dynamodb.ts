@@ -11,6 +11,12 @@ const client = new DynamoDBClient({
 
 const docClient = DynamoDBDocumentClient.from(client);
 
+interface DynamoDBError extends Error {
+  $metadata?: {
+    requestId?: string;
+  };
+}
+
 /**
  * Fetches all records from the MusicUrls table and returns them sorted by newest first.
  */
@@ -26,8 +32,6 @@ export async function getMusicUrls(): Promise<MusicUrlRecord[]> {
     const rawItems = (response.Items as MusicUrlResponseItem[]) || [];
 
     // Filter items that have all required fields and ensure type safety
-    // Verification (Task 2): 'title' is optional in MusicUrlRecord, so it will be included
-    // if present in rawItems and not filtered out here.
     const validItems = rawItems.filter((item): item is MusicUrlRecord => {
       return !!(
         item.message_id &&
@@ -41,13 +45,18 @@ export async function getMusicUrls(): Promise<MusicUrlRecord[]> {
     return validItems.sort((a, b) => {
       return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
     });
-  } catch (error: any) {
-    console.error("Error fetching from DynamoDB:", {
-      message: error.message,
-      code: error.name,
-      requestId: error.$metadata?.requestId,
-      stack: error.stack,
-    });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      const awsError = error as DynamoDBError;
+      console.error("Error fetching from DynamoDB:", {
+        message: awsError.message,
+        code: awsError.name,
+        requestId: awsError.$metadata?.requestId,
+        stack: awsError.stack,
+      });
+    } else {
+      console.error("Unknown error fetching from DynamoDB:", error);
+    }
     // Return empty array instead of throwing to prevent page crash (500 error)
     // This allows the page to render with a "no data" message
     return [];
