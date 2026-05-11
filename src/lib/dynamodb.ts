@@ -26,6 +26,8 @@ export async function getMusicUrls(): Promise<MusicUrlRecord[]> {
     const rawItems = (response.Items as MusicUrlResponseItem[]) || [];
 
     // Filter items that have all required fields and ensure type safety
+    // Verification (Task 2): 'title' is optional in MusicUrlRecord, so it will be included
+    // if present in rawItems and not filtered out here.
     const validItems = rawItems.filter((item): item is MusicUrlRecord => {
       return !!(
         item.message_id &&
@@ -44,7 +46,7 @@ export async function getMusicUrls(): Promise<MusicUrlRecord[]> {
       message: error.message,
       code: error.name,
       requestId: error.$metadata?.requestId,
-      stack: error.stack
+      stack: error.stack,
     });
     // Return empty array instead of throwing to prevent page crash (500 error)
     // This allows the page to render with a "no data" message

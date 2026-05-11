@@ -54,7 +54,7 @@ export default async function Home() {
                     rel="noopener noreferrer"
                     className="flex items-center gap-2"
                   >
-                    <span>{item.url}</span>
+                    <span>{item.title || item.url}</span>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
@@ -71,6 +71,12 @@ export default async function Home() {
                     </svg>
                   </a>
                 </h2>
+
+                {item.title && (
+                  <p className="text-xs text-gray-500 mb-2 truncate">
+                    {item.url}
+                  </p>
+                )}
                 
                 <div className="mt-4 flex items-center gap-2">
                   {item.url.includes("spotify.com") && (
