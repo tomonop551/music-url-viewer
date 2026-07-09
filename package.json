@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "oxlint .",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -30,28 +30,22 @@
     "@types/react-dom": "^19",
     "@vitest/browser-playwright": "^4.1.7",
     "@vitest/coverage-v8": "^4.1.7",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.4",
-    "eslint-plugin-storybook": "^10.4.1",
+    "oxlint": "^1.73.0",
     "playwright": "^1.60.0",
     "storybook": "^10.4.1",
     "tailwindcss": "^4",
-    "typescript": "^5",
+    "typescript": "^7",
     "vite": "^8.0.14",
     "vitest": "^4.1.7"
   },
   "pnpm": {
-    "onlyBuiltDependencies": [
-      "sharp",
-      "unrs-resolver",
-      "sharp",
-      "unrs-resolver",
-      "sharp",
-      "unrs-resolver"
-    ],
-    "allowBuilds": {
-      "sharp": true,
-      "unrs-resolver": true
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "typescript": "7"
+      }
+    },
+    "overrides": {
+      "valibot": "^1.4.2"
     }
   }
 }
