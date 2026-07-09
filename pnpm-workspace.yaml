@@ -6,3 +6,6 @@ allowBuilds:
   "sharp": true
   "unrs-resolver": true
   "esbuild": true
+
+overrides:
+  valibot: ^1.4.2
