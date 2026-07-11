@@ -4,6 +4,7 @@ export interface MusicUrlRecord {
   user_name: string;
   timestamp: string;
   title?: string;
+  dopamine?: number;
   [key: string]: unknown; // Add this line
 }
 

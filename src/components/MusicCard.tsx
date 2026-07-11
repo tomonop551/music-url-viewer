@@ -52,6 +52,11 @@ export function MusicCard({ item }: MusicCardProps) {
       )}
 
       <div className="mt-4 flex items-center gap-2">
+        {item.dopamine !== undefined && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-pink-50 text-pink-700 border border-pink-200">
+            dopamine: {item.dopamine}
+          </span>
+        )}
         {item.url.includes("spotify.com") && (
           <span className="text-[10px] font-bold uppercase tracking-wider text-green-500 border border-green-200 px-1.5 py-0.5 rounded">
             Spotify
