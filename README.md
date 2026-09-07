@@ -2,6 +2,12 @@
 
 A modern, high-performance web application built with Next.js to display music URLs stored in AWS DynamoDB.
 
+## AI music companion
+
+A responsive chat recommends registered tracks using Amazon Bedrock AgentCore. It uses independent MusicBrainz metadata for mood estimates and keeps the 0–10 addictiveness score separate from mood. No manual tagging is required.
+
+See [architecture and validation](docs/ai-chat.md) and [deployment skill](.agents/skills/deploy-ai-chat/SKILL.md). The metadata coverage and live model integration must be verified in the deployment environment.
+
 ## Features
 
 - **Server-Side Rendering (SSR)**: Securely fetches data from DynamoDB without exposing AWS credentials to the client.
@@ -12,7 +18,7 @@ A modern, high-performance web application built with Next.js to display music U
 
 ## Tech Stack
 
-- **Framework**: [Next.js 15 (App Router)](https://nextjs.org/)
+- **Framework**: [Next.js 16 (App Router)](https://nextjs.org/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **AWS SDK**: [AWS SDK for JavaScript v3](https://aws.amazon.com/sdk-for-javascript/)
 - **Runtime Manager**: [mise](https://mise.jdx.dev/)
@@ -69,14 +75,13 @@ Open [http://localhost:3000](http://localhost:3000) to see the result.
 - `src/app/page.tsx`: Main page with ISR configuration.
 - `src/lib/dynamodb.ts`: DynamoDB client and data fetching logic.
 - `src/lib/env.ts`: Type-safe environment variable management.
-- `src/types/`: TypeScript definitions for domain models and process environment.
+- `src/types/`: TypeScript definitions for music records and chat messages.
 
 ## Deployment
 
-1. Connect your repository to **AWS Amplify Hosting**.
-2. Set the environment variable `NEXT_PUBLIC_AWS_REGION` to `ap-northeast-1` (or your preferred region).
-3. Ensure the Amplify Service Role has read access to your DynamoDB table.
-4. Deploy!
+Use the repository's [deploy-ai-chat skill](.agents/skills/deploy-ai-chat/SKILL.md) to prepare, deploy, verify, or roll back the Terraform infrastructure and Amplify application.
+
+Example request: `$deploy-ai-chat Prepare a deployment plan for the music companion.`
 
 ## License
 

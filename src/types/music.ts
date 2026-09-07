@@ -5,7 +5,7 @@ export interface MusicUrlRecord {
   timestamp: string;
   title?: string;
   dopamine?: number;
-  [key: string]: unknown; // Add this line
+  [key: string]: unknown;
 }
 
 // Raw data as received (in case all fields could be optional)

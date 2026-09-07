@@ -1,0 +1,6 @@
+*
+!requirements.txt
+!catalog.py
+!recommender.py
+!main.py
+!Dockerfile

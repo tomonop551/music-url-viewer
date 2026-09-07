@@ -1,7 +1,6 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
+# JavaScript dependencies and local package stores
+node_modules/
+.pnpm-store/
 /.pnp
 .pnp.*
 .yarn/*
@@ -10,35 +9,58 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
-
-# next.js
+# Next.js and frontend build outputs
 /.next/
 /out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
+/build/
+/storybook-static/
+.vercel/
 *.tsbuildinfo
 next-env.d.ts
 
-*storybook.log
-storybook-static
+# Test reports and coverage
+/coverage/
+/test-results/
+/playwright-report/
+/blob-report/
+htmlcov/
+.coverage
+.coverage.*
+
+# Local environment and credentials
+.env*
+!/.env.example
+*.pem
+*.key
+.terraformrc
+terraform.rc
+
+# Logs and operating system artifacts
+*.log
+.DS_Store
+
+# Terraform working data and private environment configuration
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+*.tfplan
+*.tfplan.json
+tfplan
+tfplan.json
+backend.hcl
+backend.*.hcl
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Python caches and local agent artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+/agent/dist/

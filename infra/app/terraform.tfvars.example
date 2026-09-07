@@ -1,0 +1,8 @@
+region                    = "ap-northeast-1"
+music_table_name          = "MusicUrls"
+ecr_repository_name       = "music-companion-agent"
+agent_image_digest        = "sha256:REPLACE_WITH_PUSHED_ARM64_IMAGE_DIGEST"
+amplify_compute_role_name = "example-ssr-compute-role"
+bedrock_model_id          = "REPLACE_WITH_AVAILABLE_CONVERSE_MODEL_OR_PROFILE"
+bedrock_model_arns        = ["arn:aws:bedrock:ap-northeast-1::foundation-model/REPLACE_WITH_MODEL"]
+musicbrainz_user_agent    = "MusicCompanion/1.0 (https://example.com/contact)"

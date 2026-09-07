@@ -1,3 +1,4 @@
+import "server-only";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
 
@@ -21,15 +22,16 @@ interface DynamoDBError extends Error {
  * Fetches all records from the MusicUrls table and returns them sorted by newest first.
  */
 export async function getMusicUrls(): Promise<MusicUrlRecord[]> {
-  const tableName = "MusicUrls";
+  const tableName = process.env.MUSIC_TABLE_NAME || "MusicUrls";
 
   try {
-    const command = new ScanCommand({
-      TableName: tableName,
-    });
-
-    const response = await docClient.send(command);
-    const rawItems = (response.Items as MusicUrlResponseItem[]) || [];
+    const rawItems: MusicUrlResponseItem[] = [];
+    let cursor: Record<string, unknown> | undefined;
+    do {
+      const response = await docClient.send(new ScanCommand({ TableName: tableName, ExclusiveStartKey: cursor }));
+      rawItems.push(...((response.Items as MusicUrlResponseItem[]) || []));
+      cursor = response.LastEvaluatedKey;
+    } while (cursor);
 
     // Filter items that have all required fields and ensure type safety
     const validItems = rawItems.filter((item): item is MusicUrlRecord => {
