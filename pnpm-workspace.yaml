@@ -1,11 +1,13 @@
 onlyBuiltDependencies:
   - sharp
   - unrs-resolver
+  - workerd
 
 allowBuilds:
   "sharp": true
   "unrs-resolver": true
   "esbuild": true
+  "workerd": true
 
 overrides:
   valibot: ^1.4.2

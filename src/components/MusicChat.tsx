@@ -27,7 +27,7 @@ export function MusicChat({ available = true }: { available?: boolean }) {
     const timer = setTimeout(() => controller.abort(), 55000);
     try {
       const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(reset ? { reset: true } : { message: text, startNew: messages.length === 0 }), signal: controller.signal });
-      const data = await response.json();
+      const data = (await response.json()) as { error?: unknown };
       if (!response.ok) throw Object.assign(new Error(typeof data.error === "string" ? data.error : "送信できませんでした。"), { name: "ChatRequestError" });
       if (reset) setMessages([]);
       else {

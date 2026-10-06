@@ -41,6 +41,8 @@ migrations_dir = "migrations"
 # ---- Workers AI ----
 # バインディングは `env.AI`（組み込み名）。route.ts が src/lib/ai.ts(bindWorkersAi) 経由で
 # function calling を呼び出す。モデルは [vars] AI_MODEL_ID。
+[ai]
+binding = "AI"
 
 # ---- 定期取り込み（旧 Lambda + EventBridge rate(15min)）----
 # Worker に scheduled ハンドラを持つ場合に有効化する（min 間隔 1 分）
