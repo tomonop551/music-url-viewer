@@ -28,21 +28,17 @@ APP_ORIGIN = "https://example.com"        # TODO: 実ドメイン確定後に設
 CHAT_DAILY_LIMIT = "200"                  # 既存 .env のデフォルト（日次枠）
 MUSICBRAINZ_USER_AGENT = "music-url-viewer/0.1 (+https://github.com/tomonop551/music-url-viewer)"
 
-# ---- D1: 音楽カタログ（旧 DynamoDB `MusicUrls`）----
-# ID は `wrangler d1 create music_catalog` の結果を埋める（setup スクリプトが自動反映）
+# ---- D1: 音楽カタログ ＋ 特徴量 ＋ 日次枠（旧: DynamoDB `MusicUrls` / `-features` / `-chat` の一部）----
+# catalog と features は message_id で常に結合するため、単一 DB に同居させる
+# （D1 はデータベース間 join が不可）。ID は `wrangler d1 create music_url_viewer` で埋める。
 [[d1_databases]]
-binding = "DB_CATALOG"
-database_name = "music_catalog"
-database_id = "{DB_CATALOG_ID}"
+binding = "DB"
+database_name = "music_url_viewer"
+database_id = "{MUSIC_URL_VIEWER_D1_ID}"
+migrations_dir = "migrations"
 
-# ---- D1: 特徴量・嗜好性スコア（旧 `${name}-features`）----
-[[d1_databases]]
-binding = "DB_FEATURES"
-database_name = "music_features"
-database_id = "{DB_FEATURES_ID}"
-
-# ---- KV: チャット会話・日次枠・key-value（旧 `${name}-chat`）----
-# expiresIn / expiresAt で TTL 相当を付与できるため、D1 より自然に管理できる
+# ---- KV: チャットセッション履歴・key-value（旧 `${name}-chat` の履歴/汎用 KV）----
+# expiresIn / expiresAt で TTL 相当を付与。日次枠（原子加算が必要）は D1 `music_chat_budget` に置く
 [[kv_namespaces]]
 binding = "CHAT_KV"
 id = "{CHAT_KV_ID}"
