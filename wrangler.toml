@@ -1,6 +1,6 @@
 # music-url-viewer — Cloudflare IaC（単一ソース: wrangler.toml）
 #
-# 設計方針は docs/infra-cloudflare-migration.md §3 を参照。
+# 設計方針は issue #1 のIaC技術選定コメントを参照。
 # アカウント層（D1 DB・KV namespace の作成）は scripts/setup-cloudflare.sh で初期化し、
 # 返却される ID を下のプレースホルダに埋める。実シークレットは git に入れず
 # `wrangler secret put <NAME>` で設定する。
