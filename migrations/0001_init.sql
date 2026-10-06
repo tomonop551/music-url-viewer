@@ -2,10 +2,10 @@
 -- 対象 issue #1。データ移行方針は issue コメント参照。
 --
 -- 設計メモ:
---  * DynamoDB `MusicUrls` と `${name}-features` は常に music_id で結合するため、
---    単一の D1 データベース（binding `DB`）に同居させる。DB を跨ぐ join は不可能。
---  * chat のセッション履歴・日次枠は KV+TTL の方が適切だが、日次枠の加算は
---    原子性が必要なため `music_chat_budget` のみ D1 に置く（下記 DDL）。
+--  * DynamoDB `MusicUrls`・`${name}-features`・`${name}-chat` は全て message_id/session/day で
+--    関連し合うため、単一の D1 データベース（binding `DB`）に同居させる。DB を跨ぐ join は不可。
+--  * chat のセッションロック（busy_until）と日次枠の加算は「原子条件付き更新」が必須。
+--    KV は compare-and-set 不可のため再現できない → chat は D1 に置く（TTL は定期 cleanup Worker）。
 --  * `dopamine` は 0–10、NULL = 未評価。bool や範囲外は不正値として扱う。
 --  * `music_features.tags` は JSON 文字列（配列）で保存し、json1 関数で操作。
 
@@ -43,8 +43,26 @@ CREATE TABLE IF NOT EXISTS music_features (
 -- 取り込み Worker の「期限切れレコード抽出」用
 CREATE INDEX IF NOT EXISTS idx_music_features_refresh ON music_features(refresh_after);
 
--- 旧 `${name}-chat` のうち日次枠のみ D1 へ（原子インクリメントを必要とするため）。
--- セッション履歴・key-value は KV（TTL 管理）へ移す。
+-- 旧 `${name}-chat` のセッション（会話履歴・並行ロック）。原子条件付き更新で制御し、
+-- クリーンアップ Worker が更新時刻から TTL（既定 24h）を過ぎた行を削除する。
+CREATE TABLE IF NOT EXISTS music_chat_session (
+  session_id   TEXT PRIMARY KEY,             -- cookie で識別する UUID
+  history      TEXT NOT NULL DEFAULT '[]',   -- JSON 配列 [ {role, text} … ]（最大 12 要素）
+  busy_until   INTEGER,                      -- epoch 秒…処理中の排他ロック
+  lock_id      TEXT,                         -- ロック取得者の token（解放確認用）
+  last_request INTEGER,                      -- epoch 秒…直近リクエスト（重複抑制）
+  updated_at   INTEGER NOT NULL              -- ロールが古い行の TTL 撤去に使う
+);
+
+-- 旧 `${name}-chat` のうち key-value 用途（汎用）。クリーンアップ Worker が key 単位で
+-- 期限切れを削除しても良い。
+CREATE TABLE IF NOT EXISTS music_chat_kv (
+  key        TEXT PRIMARY KEY,
+  value      TEXT NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
+-- 旧 `${name}-chat` の日次枠: 原子インクリメント（加算と上限判定が一貫）。
 CREATE TABLE IF NOT EXISTS music_chat_budget (
   day   TEXT PRIMARY KEY,      -- 'YYYY-MM-DD'
   count INTEGER NOT NULL DEFAULT 0

@@ -1,7 +1,7 @@
 # music-url-viewer — Cloudflare IaC（単一ソース: wrangler.toml）
 #
 # 設計方針は issue #1 のIaC技術選定コメントを参照。
-# アカウント層（D1 DB・KV namespace の作成）は scripts/setup-cloudflare.sh で初期化し、
+# アカウント層（D1 DB の作成）は scripts/setup-cloudflare.sh で初期化し、
 # 返却される ID を下のプレースホルダに埋める。実シークレットは git に入れず
 # `wrangler secret put <NAME>` で設定する。
 #
@@ -27,6 +27,7 @@ workers_dev = true
 APP_ORIGIN = "https://example.com"        # TODO: 実ドメイン確定後に設定
 CHAT_DAILY_LIMIT = "200"                  # 既存 .env のデフォルト（日次枠）
 MUSICBRAINZ_USER_AGENT = "music-url-viewer/0.1 (+https://github.com/tomonop551/music-url-viewer)"
+AI_MODEL_ID = "@cf/moonshotai/kimi-k2.7-code"  # function calling 対応モデル（要実機検証）
 
 # ---- D1: 音楽カタログ ＋ 特徴量 ＋ 日次枠（旧: DynamoDB `MusicUrls` / `-features` / `-chat` の一部）----
 # catalog と features は message_id で常に結合するため、単一 DB に同居させる
@@ -37,15 +38,9 @@ database_name = "music_url_viewer"
 database_id = "{MUSIC_URL_VIEWER_D1_ID}"
 migrations_dir = "migrations"
 
-# ---- KV: チャットセッション履歴・key-value（旧 `${name}-chat` の履歴/汎用 KV）----
-# expiresIn / expiresAt で TTL 相当を付与。日次枠（原子加算が必要）は D1 `music_chat_budget` に置く
-[[kv_namespaces]]
-binding = "CHAT_KV"
-id = "{CHAT_KV_ID}"
-
 # ---- Workers AI ----
-# バインディングは `env.AI`（組み込み名）。旧 Bedrock 呼び出しを
-# `@cloudflare/ai-utils`（runWithTools）へ移植して使う。
+# バインディングは `env.AI`（組み込み名）。route.ts が src/lib/ai.ts(bindWorkersAi) 経由で
+# function calling を呼び出す。モデルは [vars] AI_MODEL_ID。
 
 # ---- 定期取り込み（旧 Lambda + EventBridge rate(15min)）----
 # Worker に scheduled ハンドラを持つ場合に有効化する（min 間隔 1 分）
