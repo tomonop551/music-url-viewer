@@ -45,7 +45,9 @@ migrations_dir = "migrations"
 binding = "AI"
 
 # ---- 定期取り込み（旧 Lambda + EventBridge rate(15min)）----
-# Worker に scheduled ハンドラを持つ場合に有効化する（min 間隔 1 分）
+# 濃縮は 1 日 1 回に実施（旧 15 分間隔）。Catalog ≤300 前提なら日次で十分。
+# Worker に scheduled ハンドラを持つ場合に有効化する。日次化で追いつかないよう、
+# 1 実行あたりの処理件数上限（旧: 25 件）は catalog 規模に合わせて引き上げること。
 # コミット時点ではコメントアウト（メイン Worker への組み込み可否を検証してから）
 # [triggers]
-# crons = ["*/15 * * * *"]
+# crons = ["0 0 * * *"]
