@@ -1,11 +1,5 @@
-/**
- * Cloudflare 移行: Workers AI function calling への配線層。
- * recommender.ts の抽象 `CallModel`（neutral な messages/tools/tool_call）を
- * env.AI.run の wire format に変換する。
- *
- * 注意: この wire shape は要実機検証。実バインディング（`wrangler dev` で AI binding 有効時）に
- * 対し、function_call の `arguments` が文字列/オブジェクトどちらで返るかを確認して調整する。
- */
+// Workers AI function calling への配線層。recommender の抽象 CallModel を env.AI.run へ変換。
+// 注意: wire shape 要実機検証。function_call の arguments が文字列/オブジェクトどちらで返るか実 binding で確認して調整する。
 import type { CallModel, LlmMessage, ToolBlock, ToolCall, ToolDef } from "./recommender";
 
 export interface WorkersAi {
@@ -22,7 +16,6 @@ interface BlockCall {
   arguments?: unknown;
 }
 
-/** Workers AI の tool 定義へ変換（function: {…} ネスト）。 */
 function toWireTools(tools: ToolDef[]): unknown[] {
   return tools.map((t) => ({
     type: t.type,
@@ -30,7 +23,6 @@ function toWireTools(tools: ToolDef[]): unknown[] {
   }));
 }
 
-/** neutral LlmMessage[] → Workers AI messages。system は先頭に付与。 */
 function toWireMessages(system: string, messages: LlmMessage[]): unknown[] {
   return [
     { role: "system", content: system },
@@ -79,7 +71,6 @@ function extractCalls(content: unknown): ToolCall[] {
   return calls;
 }
 
-/** env.AI を `CallModel` に束縛する。model_id は Workers AI モデル名（例: "@cf/moonshotai/kimi-k2.7-code"）。 */
 export function bindWorkersAi(env: WorkersAiEnv, modelId: string): CallModel {
   return async ({ system, messages, tools }) => {
     const raw = await env.AI.run(modelId, {

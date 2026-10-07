@@ -1,11 +1,7 @@
-/**
- * Cloudflare 移行: D1 データアクセス層（旧 src/lib/dynamodb.ts + model_catalog 呼び出し）。
- * 型は Cloudflare D1 binding の構造的ミニマム（@cloudflare/workers-types 非依存で単体検証可能に）。
- */
+// D1 データアクセス層。binding 型は構造的ミニマム（@cloudflare/workers-types 非依存で単体検証可能）。
 import { modelCatalog, type CatalogItem, type FeatureRow, type MusicRow } from "./catalog";
 import type { ChatTurn } from "./recommender";
 
-/** D1 binding の構造的型（実環境では Cloudflare が提供する binding をそのまま渡す）。 */
 export interface D1PreparedStatement {
   bind(...params: unknown[]): D1PreparedStatement;
   first<T>(): Promise<T | null>;
@@ -17,7 +13,6 @@ export interface D1Database {
   batch(statements: D1PreparedStatement[]): Promise<unknown[]>;
 }
 
-/** カタログ行の一覧（新着順）。 */
 export async function getMusicRows(db: D1Database): Promise<MusicRow[]> {
   const { results } = await db
     .prepare(
@@ -28,7 +23,6 @@ export async function getMusicRows(db: D1Database): Promise<MusicRow[]> {
   return results;
 }
 
-/** features を message_id → 行 の Map で返す。 */
 export async function getFeatureMap(db: D1Database): Promise<Map<string, FeatureRow>> {
   const { results } = await db
     .prepare(
@@ -39,13 +33,11 @@ export async function getFeatureMap(db: D1Database): Promise<Map<string, Feature
   return new Map(results.map((r) => [r.message_id, r]));
 }
 
-/** モデルカタログ（未信頼 Provider フィールドを除外済み）。旧 main.py の組み立てに相当。 */
 export async function getModelCatalog(db: D1Database): Promise<CatalogItem[]> {
   const [rows, features] = await Promise.all([getMusicRows(db), getFeatureMap(db)]);
   return modelCatalog(rows, features);
 }
 
-/** 推薦 ID からカタログ行を解決（旧 BatchGet on `MusicUrls`）。 */
 export async function resolveCatalogRecords(
   db: D1Database,
   ids: string[],
@@ -62,8 +54,6 @@ export async function resolveCatalogRecords(
   return results;
 }
 
-// ---- chat セッション（music_chat_session）----
-
 export async function seedSession(db: D1Database, sessionId: string, now: number): Promise<void> {
   await db
     .prepare(
@@ -74,10 +64,7 @@ export async function seedSession(db: D1Database, sessionId: string, now: number
     .run();
 }
 
-/**
- * セッションロックを原子条件付きで取得する。
- * 取得できた（処理できる）とき true。busy 中 / 直前2秒以内の再送 → false（429）。
- */
+// 原子条件付きでロック取得。busy / 直前 2 秒以内の再送は false（429 相当）。
 export async function acquireSessionLock(
   db: D1Database,
   sessionId: string,
@@ -158,9 +145,7 @@ export async function releaseSessionLock(
     .run();
 }
 
-// ---- 日次枠（music_chat_budget）----
-
-/** アトミックにインクリメントして新しい count を返す。caller が daily_limit と比較する。 */
+// アトミックに加算し新しい count を返す。caller が daily_limit と比較する。
 export async function incrementBudget(db: D1Database, day: string): Promise<number> {
   const row = await db
     .prepare(

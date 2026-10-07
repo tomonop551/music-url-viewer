@@ -1,6 +1,3 @@
-/**
- * WebCrypto ベースの SHA-256 hex ユーティリティ（Cloudflare Worker / Node 両対応）。
- */
 export namespace Sha256 {
   export async function hex(data: string): Promise<string> {
     const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(data));

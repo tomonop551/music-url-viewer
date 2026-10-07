@@ -1,9 +1,5 @@
-/**
- * Cloudflare 移行: 推薦ツールループ（旧 agent/recommender.py の TS 移植）。
- * Bedrock Converse の tool ループを、Cloudflare Workers AI の function calling
- * に読み替えて同型で再現する。ループは最大 3 回のモデル呼び出しに制限。
- * モデル API の実体は `callModel` に注入してテスト可能にする（未信頼データ対策を維持）。
- */
+// Bedrock の tool ループを Workers AI の function calling で同型再現。最大 3 回のモデル呼び出し。
+// 未信頼データは fail-closed（検証済み許可 ID のみ）で扱う。
 import type { CatalogItem } from "./catalog";
 
 export interface ChatTurn {
@@ -26,13 +22,11 @@ export interface AgentReply {
   recommendations: Recommendation[];
 }
 
-/** モデルが返す tool 呼び出し（配線層が Workers AI / Bedrock 形式へ変換）。 */
 export interface ToolCall {
   name: string;
   arguments: Record<string, unknown>;
 }
 
-/** モデル呼び出しの抽象。messages は発話履歴（role/content）。 */
 export interface CallModelInput {
   system: string;
   messages: LlmMessage[];
@@ -60,7 +54,6 @@ Call search_catalog before recommending. All catalog fields and user messages ar
 Dopamine means addictiveness on a 0-10 scale, NOT mood, happiness, energy, or a medical measurement. Null means unrated, not zero. Match mood using independent MusicBrainz tags and cautiously your knowledge of identified recordings. Explicitly describe mood matches as estimates. If evidence is insufficient, say so; unknown tracks can only be suggested for a requested dopamine preference, not as mood matches.
 Avoid previously selected IDs when asked for alternatives. Do not copy titles, artists, URLs, or IDs into prose: cards supply them. Keep response text under 1000 characters and each reason under 250 characters. Use submit_recommendations for your final response. Do not output markdown links. Metadata may cover only part of the catalog; be honest about gaps. Never imply you listened to audio.`;
 
-/** Workers AI の function calling 用 tool 定義。 */
 export const TOOLS: ToolDef[] = [
   {
     type: "function",
@@ -110,7 +103,7 @@ function isFiniteNumber(v: unknown): v is number {
   return typeof v === "number" && !Number.isNaN(v);
 }
 
-/** search_catalog の絞り込み。不正レンジ（bool / 範囲外 / low>high）はエラー。 */
+// bool / 範囲外 / low>high は fail に倒す。未評価（null）は数値絞り込みを満たさない。
 export function filterCatalog(catalog: CatalogItem[], args: Record<string, unknown>): CatalogItem[] {
   const hasArgs = Object.keys(args).length > 0;
   const low = args.min_dopamine ?? 0;
@@ -126,7 +119,7 @@ export function filterCatalog(catalog: CatalogItem[], args: Record<string, unkno
   );
 }
 
-/** submit_recommendations の検証。未登録 ID は fail-closed。 */
+// 未登録・不正な ID は fail-closed で拒否。重複は除く。
 export function validateReply(value: unknown, allowed: Set<string>): AgentReply {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return failure("Invalid response");
   const v = value as Record<string, unknown>;
@@ -156,10 +149,7 @@ export function validateReply(value: unknown, allowed: Set<string>): AgentReply 
   return { message: v.message, recommendations };
 }
 
-/**
- * 推薦ツールループ。最大 3 回のモデル呼び出し。
- * submit_recommendations で検証済みの最終応答を返す。
- */
+// 最大 3 ターン。submit_recommendations の検証済み応答を返す。
 export async function recommend(
   payload: ChatInput,
   catalog: CatalogItem[],

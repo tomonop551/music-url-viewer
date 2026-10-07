@@ -1,12 +1,6 @@
-/**
- * Cloudflare 移行: カタログ境界（旧 agent/catalog.py の TS 移植）。
- * モデルカタログへ本来入るものだけを通す: URL 検証・dopamine スコア・
- * MusicBrainz 独立メタの fingerprint 照合。Provider 由来の title/投稿者/timestamp は
- * model_catalog の出力に含めない（未信頼データを LLM へ渡さない設計を維持）。
- */
+// カタログ境界。Provider 由来の未信頼フィールドは catalog 出力に含めない（LLM に渡さない）。
 import { Sha256 } from "./sha256";
 
-/** music_catalog 行（D1）。 */
 export interface MusicRow {
   message_id: string;
   url: string;
@@ -16,7 +10,6 @@ export interface MusicRow {
   dopamine?: number | null;
 }
 
-/** music_features 行（D1）。tags は JSON 文字列で格納。 */
 export interface FeatureRow {
   message_id: string;
   fingerprint: string;
@@ -29,7 +22,6 @@ export interface FeatureRow {
   confidence?: string | null;
 }
 
-/** モデルに渡すカタログ項目（LLM 入力に安全なものだけ）。 */
 export interface CatalogItem {
   id: string;
   dopamine: number | null;
@@ -50,13 +42,7 @@ const HOSTS = new Set([
   "music.apple.com",
 ]);
 
-/**
- * 登録 URL を正規化する。スキーム/ホスト/資格情報を厳密に検査し、
- * ホワイトリスト外や危険な URL は null（SSRF 等を閉じる）。
- * - youtu.be/<id> → https://www.youtube.com/watch?v=<id>
- * - youtube 各ドメインの ?v=<id> → watch?v=<id>
- * - それ以外 → origin + pathname（query/fragment 除去）
- */
+// https + ホワイトリストホスト以外は拒否（SSRF 予防）。youtube 系は watch?v=<id> へ正規化。
 export function canonicalUrl(value: unknown): string | null {
   if (typeof value !== "string") return null;
   let u: URL;
@@ -83,12 +69,10 @@ export function canonicalUrl(value: unknown): string | null {
   return u.origin + u.pathname;
 }
 
-/** sha256([url, title]) の hex。url/title 変更でキャッシュを無効化する判定に使う。 */
 export async function fingerprint(record: { url?: unknown; title?: unknown }): Promise<string> {
   return Sha256.hex(JSON.stringify([record.url ?? null, record.title ?? null]));
 }
 
-/** dopamine 0–10 の検証。0 は有効、bool・文字列・NaN・範囲外は null（未評価）。 */
 export function score(value: unknown): number | null {
   if (typeof value === "boolean" || typeof value !== "number" || !Number.isFinite(value)) return null;
   return value >= 0 && value <= 10 ? value : null;
@@ -104,10 +88,7 @@ function parseTags(raw: string | null | undefined): string[] {
   }
 }
 
-/**
- * モデルカタログを組み立てる。未信頼の Provider フィールドは出力しない。
- * features の fingerprint が一致し matched/musicbrainz のときだけ独立メタを付与。
- */
+// fingerprint が一致した musicbrainz メタだけ付与する。不一致なら独立メタは出さない。
 export async function modelCatalog(
   records: MusicRow[],
   features: Map<string, FeatureRow>,
@@ -135,10 +116,6 @@ export async function modelCatalog(
   return result;
 }
 
-/**
- * カタログ一覧向け: 新着順で必須フィールドが揃った行だけ返す
- * （D1 側で ORDER BY timestamp DESC 済みを想定）。
- */
 export function validListRows(rows: MusicRow[]): MusicRow[] {
   return rows.filter((r) => r.message_id && r.url && r.timestamp);
 }
