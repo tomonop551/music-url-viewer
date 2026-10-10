@@ -1,0 +1,53 @@
+# music-url-viewer — Cloudflare IaC（単一ソース: wrangler.toml）
+#
+# 設計方針は issue #1 のIaC技術選定コメントを参照。
+# アカウント層（D1 DB の作成）は scripts/setup-cloudflare.sh で初期化し、
+# 返却される ID を下のプレースホルダに埋める。実シークレットは git に入れず
+# `wrangler secret put <NAME>` で設定する。
+#
+# 注意: これは IaC 選定のスキャフォールド。OpenNext アダプタの成果物パス（main）と
+# 最終バインディング名は、実環境で `wrangler dev` 検証後に確定する。
+
+name = "music-url-viewer"
+
+# OpenNext が生成する Worker bundle。アダプタ版数ごとに変わるため実検証で確定する
+# （例: .open-next/worker.js）
+main = ".open-next/worker.js"
+
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]  # OpenNext が Node 互換 API を要するため必須
+
+# dev/preview は wrangler dev が利用。本番 URL により production 用の [env.*] を切る方針。
+workers_dev = true
+
+# ---- アプリ実行時 変数 ----
+# 旧 `CHAT_TABLE_NAME`/`AGENTCORE_RUNTIME_ARN` は Cloudflare へ移行後不要になる
+# （D1/KV/Workers AI バインディングに置換）。残る変数をここへ集約する。
+[vars]
+APP_ORIGIN = "https://example.com"        # TODO: 実ドメイン確定後に設定
+CHAT_DAILY_LIMIT = "200"                  # 既存 .env のデフォルト（日次枠）
+MUSICBRAINZ_USER_AGENT = "music-url-viewer/0.1 (+https://github.com/tomonop551/music-url-viewer)"
+AI_MODEL_ID = "@cf/moonshotai/kimi-k2.7-code"  # function calling 対応モデル（要実機検証）
+
+# ---- D1: 音楽カタログ ＋ 特徴量 ＋ 日次枠（旧: DynamoDB `MusicUrls` / `-features` / `-chat` の一部）----
+# catalog と features は message_id で常に結合するため、単一 DB に同居させる
+# （D1 はデータベース間 join が不可）。ID は `wrangler d1 create music_url_viewer` で埋める。
+[[d1_databases]]
+binding = "DB"
+database_name = "music_url_viewer"
+database_id = "{MUSIC_URL_VIEWER_D1_ID}"
+migrations_dir = "migrations"
+
+# ---- Workers AI ----
+# バインディングは `env.AI`（組み込み名）。route.ts が src/lib/ai.ts(bindWorkersAi) 経由で
+# function calling を呼び出す。モデルは [vars] AI_MODEL_ID。
+[ai]
+binding = "AI"
+
+# ---- 定期取り込み（旧 Lambda + EventBridge rate(15min)）----
+# 濃縮は 1 日 1 回に実施（旧 15 分間隔）。Catalog ≤300 前提なら日次で十分。
+# Worker に scheduled ハンドラを持つ場合に有効化する。日次化で追いつかないよう、
+# 1 実行あたりの処理件数上限（旧: 25 件）は catalog 規模に合わせて引き上げること。
+# コミット時点ではコメントアウト（メイン Worker への組み込み可否を検証してから）
+# [triggers]
+# crons = ["0 0 * * *"]

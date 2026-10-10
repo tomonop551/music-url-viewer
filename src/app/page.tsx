@@ -1,23 +1,38 @@
-import { getMusicUrls } from "@/lib/dynamodb";
-import { getChatConfig } from "@/lib/chat-config";
-import { MusicChat } from "@/components/MusicChat";
+import { getMusicRows, type D1Database } from "@/lib/d1";
+import { validListRows } from "@/lib/catalog";
+// import { MusicChat } from "@/components/MusicChat"; // [一時停止] AIチャット（Cloudflare移行優先）
 import { MusicList } from "@/components/MusicList";
+import type { MusicUrlRecord } from "@/types/music";
 
-// Skip static generation during build to avoid AccessDeniedException in Amplify build environment
+// Cloudflare（OpenNext on Workers）ではバインディングが process.env に注入される。
+// ハンドラ外で binding を参照できないため、関数で取得する。
 export const dynamic = "force-dynamic";
 
-// Set ISR (Incremental Static Regeneration): 1 day = 86400 seconds
+// ISR（Incremental Static Regeneration）: 1 日 = 86400 秒
 export const revalidate = 86400;
 
+function db(): D1Database | undefined {
+  if (!process.env.DB) return undefined;
+  return process.env.DB as unknown as D1Database;
+}
+
 export default async function Home() {
-  const musicUrls = await getMusicUrls();
-  const chatAvailable = getChatConfig() !== null;
+  const rows = db() ? await getMusicRows(db()!) : [];
+  const musicUrls: MusicUrlRecord[] = validListRows(rows).map((r) => ({
+    message_id: r.message_id,
+    url: r.url,
+    user_name: r.user_name,
+    timestamp: r.timestamp,
+    ...(r.title ? { title: r.title } : {}),
+    ...(typeof r.dopamine === "number" ? { dopamine: r.dopamine } : {}),
+  }));
+  // const chatAvailable = Boolean(process.env.DB && process.env.AI && process.env.APP_ORIGIN); // [一時停止] AIチャット
 
   return (
     <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_390px]">
         <section className="min-w-0"><MusicList initialMusicUrls={musicUrls} /></section>
-        <MusicChat available={chatAvailable} />
+        {/* [一時停止] <MusicChat available={chatAvailable} /> */}
       </div>
     </main>
   );

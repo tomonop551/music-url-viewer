@@ -34,7 +34,7 @@ Only independently retrieved MusicBrainz titles, artist credits, positive-vote t
 
 Mood matching happens during the conversation using the independent metadata and the model's knowledge of identified recordings. It is an estimate, not audio analysis. No mood tags require manual entry. Unresolved recordings remain eligible for explicit addictiveness requests, but the model is instructed not to claim a mood match for them. Unknown or deleted IDs cannot become links: both the agent and API check catalog membership, and the API resolves links from the current database.
 
-The worker runs every 15 minutes, processing at most 25 due records per invocation. Known matches refresh after seven days; unresolved records retry after one day. A title or URL change invalidates cached metadata immediately through a fingerprint. A changed addictiveness rating takes effect on the next catalog read. Upstream failures preserve existing metadata, retry after an hour, and produce a Lambda error alarm. The worker uses a single concurrent execution and spaces MusicBrainz requests by at least 1.1 seconds.
+The worker runs once daily, with the per-invocation batch cap raised from the legacy 25 to the catalog size (≤300) so a day's run can keep up. Known matches refresh after seven days; unresolved records retry after one day. A title or URL change invalidates cached metadata immediately through a fingerprint. A changed addictiveness rating takes effect on the next catalog read. Upstream failures preserve existing metadata, retry after an hour, and produce a Lambda error alarm. The worker uses a single concurrent execution and spaces MusicBrainz requests by at least 1.1 seconds.
 
 ## Boundaries and limitations
 

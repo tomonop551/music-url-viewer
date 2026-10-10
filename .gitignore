@@ -18,6 +18,10 @@ node_modules/
 *.tsbuildinfo
 next-env.d.ts
 
+# OpenNext (Cloudflare) build output and generated worker types
+/.open-next/
+/worker-configuration.d.ts
+
 # Test reports and coverage
 /coverage/
 /test-results/
