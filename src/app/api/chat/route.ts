@@ -1,3 +1,9 @@
+/*
+ * [一時停止] AIチャット機能 /api/chat（Cloudflare移行を優先するため無効化）。
+ * 復旧時はこのブロックコメントを外してハンドラを再有効化する。
+ * 現時点ではエクスポート無しのため /api/chat は 404/405 になる。
+ */
+/*
 import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -122,4 +128,15 @@ export async function POST(request: Request) {
   } finally {
     if (locked) await releaseSessionLock(db, session, lock).catch(() => {});
   }
+}
+*/
+export const runtime = "nodejs";
+
+// [一時停止] AIチャットは無効化中。上記の実装はコメントで保持。
+// Next の route ファイルはハンドラ必須のため、最小の 503 スタブを残す。
+export async function POST() {
+  return new Response(JSON.stringify({ error: "AIチャットは現在ご利用いただけません（一時停止中）。" }), {
+    status: 503,
+    headers: { "content-type": "application/json", "cache-control": "no-store" },
+  });
 }

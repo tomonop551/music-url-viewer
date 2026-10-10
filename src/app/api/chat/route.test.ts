@@ -1,3 +1,7 @@
+/*
+ * [一時停止] AIチャット機能のテスト（/api/chat 無効化に伴い停止）。復旧時はこのコメントを外す。
+ */
+/*
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -147,3 +151,4 @@ describe("chat API", () => {
     expect(mocks.setSessionHistory).not.toHaveBeenCalled();
   });
 });
+*/

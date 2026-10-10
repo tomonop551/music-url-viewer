@@ -1,6 +1,6 @@
 import { getMusicRows, type D1Database } from "@/lib/d1";
 import { validListRows } from "@/lib/catalog";
-import { MusicChat } from "@/components/MusicChat";
+// import { MusicChat } from "@/components/MusicChat"; // [一時停止] AIチャット（Cloudflare移行優先）
 import { MusicList } from "@/components/MusicList";
 import type { MusicUrlRecord } from "@/types/music";
 
@@ -26,14 +26,13 @@ export default async function Home() {
     ...(r.title ? { title: r.title } : {}),
     ...(typeof r.dopamine === "number" ? { dopamine: r.dopamine } : {}),
   }));
-  // チャット可用: D1 と Workers AI バインディング、APP_ORIGIN が揃ったとき
-  const chatAvailable = Boolean(process.env.DB && process.env.AI && process.env.APP_ORIGIN);
+  // const chatAvailable = Boolean(process.env.DB && process.env.AI && process.env.APP_ORIGIN); // [一時停止] AIチャット
 
   return (
     <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_390px]">
         <section className="min-w-0"><MusicList initialMusicUrls={musicUrls} /></section>
-        <MusicChat available={chatAvailable} />
+        {/* [一時停止] <MusicChat available={chatAvailable} /> */}
       </div>
     </main>
   );
