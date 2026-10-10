@@ -8,5 +8,5 @@ export interface MusicUrlRecord {
   [key: string]: unknown;
 }
 
-// Raw data as received (in case all fields could be optional)
+// 受信生データ（どのフィールドも省略され得る場合の型）
 export type MusicUrlResponseItem = Partial<MusicUrlRecord> & Record<string, unknown>;

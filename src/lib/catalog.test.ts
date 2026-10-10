@@ -9,8 +9,8 @@ const row = (over: Partial<MusicRow> = {}): MusicRow => ({
   ...over,
 });
 
-describe("catalog", () => {
-  it("provider content is excluded and stale metadata is ignored", async () => {
+describe("カタログ", () => {
+  it("Provider 由来の内容は除外され、期限切れメタは無視される", async () => {
     const record = { ...row(), title: "PRIVATE_PROVIDER_TITLE", user_name: "PRIVATE_NAME", dopamine: 0 };
     const unknown = await modelCatalog([record], new Map());
     expect(JSON.stringify(unknown)).not.toContain("PRIVATE");
@@ -34,12 +34,12 @@ describe("catalog", () => {
     expect(stale[0].metadata_status).toBe("unknown");
   });
 
-  it("zero is not missing or boolean", () => {
+  it("0 は未評価でも boolean でもない", () => {
     expect(score(0)).toBe(0);
     for (const value of [null, true, -1, 11, "10", Number.NaN]) expect(score(value)).toBeNull();
   });
 
-  it("unsafe urls are rejected", () => {
+  it("危険な URL は拒否される", () => {
     for (const value of [null, "javascript:alert(1)", "https://youtube.com.evil.example/watch", "https://user:pass@youtube.com/watch"]) {
       expect(canonicalUrl(value)).toBeNull();
     }
@@ -47,8 +47,8 @@ describe("catalog", () => {
   });
 });
 
-describe("catalog capacity", () => {
-  it("produces only ids with valid canonical urls", async () => {
+describe("カタログ容量", () => {
+  it("正規化で有効な URL の id のみ残る", async () => {
     const items: CatalogItem[] = await modelCatalog(
       [row({ url: "https://youtu.be/ok" }), row({ message_id: "bad", url: "javascript:alert(1)" })],
       new Map(),

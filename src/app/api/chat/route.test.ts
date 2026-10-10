@@ -68,14 +68,14 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 
-describe("chat API", () => {
-  it("rejects cross-origin requests before any storage/ai access", async () => {
+describe("チャットAPI", () => {
+  it("ストレージ/AI アクセス前にクロスオリジンを拒否", async () => {
     expect((await POST(request({ message: "曲を探して" }, "https://other.example"))).status).toBe(403);
     expect(mocks.incrementBudget).not.toHaveBeenCalled();
     expect(mocks.callModel).not.toHaveBeenCalled();
   });
 
-  it("fails closed when origin config or input is invalid", async () => {
+  it("origin 設定・入力不正で fail-closed", async () => {
     vi.unstubAllEnvs();
     expect((await POST(request({ message: "hello" }))).status).toBe(503);
     expect(mocks.incrementBudget).not.toHaveBeenCalled();
@@ -85,7 +85,7 @@ describe("chat API", () => {
     expect(mocks.incrementBudget).not.toHaveBeenCalled();
   });
 
-  it("resolves current links, drops deleted tracks, and resets context on startNew", async () => {
+  it("現在のリンクを解決し、削除曲を除外し、startNew で文脈リセット", async () => {
     mocks.getModelCatalog.mockResolvedValue([
       { id: "demo", dopamine: 0, metadata_status: "unknown" },
       { id: "deleted", dopamine: 8, metadata_status: "unknown" },
@@ -105,7 +105,7 @@ describe("chat API", () => {
     expect(mocks.releaseSessionLock).toHaveBeenCalled();
   });
 
-  it("preserves prior turns for follow-up requests", async () => {
+  it("後続リクエストで過去ターンを保持", async () => {
     mocks.getSessionHistory.mockResolvedValue([
       { role: "user", text: "old context" },
       { role: "assistant", text: "old reply" },
@@ -119,21 +119,21 @@ describe("chat API", () => {
     expect(msgs[2]).toEqual({ role: "user", content: "別の曲" });
   });
 
-  it("stops before inference when the shared budget is exhausted", async () => {
+  it("共有枠を使い切ると推論前に停止", async () => {
     mocks.incrementBudget.mockResolvedValue(201); // > dailyLimit(200)
     expect((await POST(request({ message: "曲" }))).status).toBe(429);
     expect(mocks.callModel).not.toHaveBeenCalled();
     expect(mocks.acquireSessionLock).not.toHaveBeenCalled();
   });
 
-  it("returns 429 when the session lock is busy", async () => {
+  it("セッションロック中は 429", async () => {
     mocks.acquireSessionLock.mockResolvedValue(false);
     expect((await POST(request({ message: "曲" }))).status).toBe(429);
     expect(mocks.callModel).not.toHaveBeenCalled();
     expect(mocks.releaseSessionLock).not.toHaveBeenCalled();
   });
 
-  it("releases its lock and hides provider details after inference failure", async () => {
+  it("推論失敗後にロック解放し、プロバイダ詳細を隠す", async () => {
     mocks.getModelCatalog.mockResolvedValue([]);
     mocks.callModel.mockReset();
     mocks.callModel.mockRejectedValueOnce(new Error("private upstream detail"));
@@ -143,7 +143,7 @@ describe("chat API", () => {
     expect(mocks.releaseSessionLock).toHaveBeenCalled();
   });
 
-  it("resets without invoking the model", async () => {
+  it("モデルを呼ばずにリセット", async () => {
     const response = await POST(request({ reset: true }));
     expect(response.status).toBe(200);
     expect(mocks.callModel).not.toHaveBeenCalled();
