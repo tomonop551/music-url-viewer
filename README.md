@@ -57,6 +57,17 @@ mise exec -- pnpm deploy:cf
 
 This runs `opennextjs-cloudflare build` and `wrangler deploy`.
 
+## Basic Auth
+
+全ルートは `src/proxy.ts` で Basic 認証により保護されている。認証情報は公開リポジトリに平文で置かないため、Cloudflare の secrets として設定する。
+
+```bash
+wrangler secret put BASIC_AUTH_USER
+wrangler secret put BASIC_AUTH_PASSWORD
+```
+
+未設定の環境（ローカル開発など）では認証ゲートが無効になる。ローカルで検証する場合は `.env.example` を `.env` にコピーして値を埋める。
+
 ## License
 
 MIT
