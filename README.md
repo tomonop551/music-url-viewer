@@ -1,87 +1,70 @@
 # Music URL Viewer
 
-A modern, high-performance web application built with Next.js to display music URLs stored in AWS DynamoDB.
+A modern, high-performance web application built with Next.js to display music URLs stored in Cloudflare D1.
 
 ## AI music companion
 
-A responsive chat recommends registered tracks using Amazon Bedrock AgentCore. It uses independent MusicBrainz metadata for mood estimates and keeps the 0–10 addictiveness score separate from mood. No manual tagging is required.
+A responsive chat recommends registered tracks using Cloudflare Workers AI and independent MusicBrainz metadata. It keeps the 0–10 addictiveness score separate from mood; no manual tagging is required.
 
-See [architecture and validation](docs/ai-chat.md) and [deployment skill](.agents/skills/deploy-ai-chat/SKILL.md). The metadata coverage and live model integration must be verified in the deployment environment.
+> The chat is temporarily paused during the Cloudflare migration.
 
 ## Features
 
-- **Server-Side Rendering (SSR)**: Securely fetches data from DynamoDB without exposing AWS credentials to the client.
-- **Incremental Static Regeneration (ISR)**: Cached for 24 hours to ensure blazing-fast performance and minimal AWS costs.
+- **Server-Side Rendering (SSR)**: Securely fetches data from Cloudflare D1 without exposing credentials to the client.
+- **Incremental Static Regeneration (ISR)**: Cached for 24 hours for fast performance.
 - **Modern UI**: Clean, responsive card-based layout built with Tailwind CSS.
 - **Auto-Sorting**: Automatically sorts entries by timestamp in descending order.
-- **Secure Authentication**: Utilizes IAM Roles/Service Roles for AWS authentication, following security best practices.
 
 ## Tech Stack
 
 - **Framework**: [Next.js 16 (App Router)](https://nextjs.org/)
+- **Runtime**: [Cloudflare Workers](https://workers.cloudflare.com/) via [OpenNext](https://opennext.js.org/cloudflare)
+- **Database**: [Cloudflare D1](https://developers.cloudflare.com/d1/)
+- **AI**: [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **AWS SDK**: [AWS SDK for JavaScript v3](https://aws.amazon.com/sdk-for-javascript/)
-- **Runtime Manager**: [mise](https://mise.jdx.dev/)
-- **Package Manager**: [pnpm](https://pnpm.io/)
-- **Deployment**: [AWS Amplify Hosting](https://aws.amazon.com/amplify/hosting/)
-
-## Prerequisites
-
-- **Node.js**: LTS version (managed via `mise`)
-- **AWS Account**: With a DynamoDB table named `MusicUrls`
-- **DynamoDB Table Schema**:
-  - Partition Key: `message_id` (String)
-  - Columns: `url` (String), `user_name` (String), `timestamp` (String/ISO8601)
+- **Tooling**: [mise](https://mise.jdx.dev/) and [pnpm](https://pnpm.io/)
 
 ## Getting Started
 
-### 1. Setup Environment
-
-Using `mise` and `pnpm`:
+### 1. Install dependencies
 
 ```bash
-# Setup runtimes
 mise install
-mise use node@lts
-mise use pnpm@latest
-
-# Install dependencies
-pnpm install
+mise run install
 ```
 
-### 2. AWS Authentication
+### 2. Set up Cloudflare
 
-This project follows the AWS best practice of using implicit credentials.
+Create the D1 database (fills the binding ID in `wrangler.toml`) and apply the schema:
 
-#### Local Development
-Ensure you have configured your local AWS profile:
 ```bash
-aws configure
+mise exec -- bash scripts/setup-cloudflare.sh
+mise exec -- wrangler d1 migrations apply music_url_viewer --remote
 ```
-The SDK will automatically use your default profile from `~/.aws/credentials`.
 
-#### Production (AWS Amplify)
-Attach the `AmazonDynamoDBReadOnlyAccess` policy to the IAM Service Role assigned to your Amplify Hosting instance. No environment variables for credentials are required.
-
-### 3. Run Development Server
+### 3. Run the development server
 
 ```bash
 mise run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) to see the result.
+
+Open [http://localhost:3000](http://localhost:3000).
 
 ## Project Structure
 
 - `src/app/page.tsx`: Main page with ISR configuration.
-- `src/lib/dynamodb.ts`: DynamoDB client and data fetching logic.
-- `src/lib/env.ts`: Type-safe environment variable management.
+- `src/lib/d1.ts`: D1 data access layer.
+- `src/lib/catalog.ts`: Catalog boundary (URL canonicalization, fingerprint, metadata modeling).
+- `src/lib/ai.ts`: Workers AI function-calling wiring.
 - `src/types/`: TypeScript definitions for music records and chat messages.
 
 ## Deployment
 
-Use the repository's [deploy-ai-chat skill](.agents/skills/deploy-ai-chat/SKILL.md) to prepare, deploy, verify, or roll back the Terraform infrastructure and Amplify application.
+```bash
+mise exec -- pnpm deploy:cf
+```
 
-Example request: `$deploy-ai-chat Prepare a deployment plan for the music companion.`
+This runs `opennextjs-cloudflare build` and `wrangler deploy`.
 
 ## License
 
