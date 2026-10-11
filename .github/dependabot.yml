@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      storybook:
+        patterns:
+          - storybook
+          - "@storybook/*"
+          - "@chromatic-com/storybook"
+      vitest:
+        patterns:
+          - vitest
+          - "@vitest/*"
+      types:
+        patterns:
+          - "@types/*"
