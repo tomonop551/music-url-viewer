@@ -17,3 +17,7 @@ updates:
       types:
         patterns:
           - "@types/*"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
