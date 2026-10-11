@@ -39,29 +39,10 @@ htmlcov/
 !/.env.example
 *.pem
 *.key
-.terraformrc
-terraform.rc
 
 # Logs and operating system artifacts
 *.log
 .DS_Store
-
-# Terraform working data and private environment configuration
-.terraform/
-*.tfstate
-*.tfstate.*
-*.tfvars
-*.tfvars.json
-*.tfplan
-*.tfplan.json
-tfplan
-tfplan.json
-backend.hcl
-backend.*.hcl
-override.tf
-override.tf.json
-*_override.tf
-*_override.tf.json
 
 # Python caches and local agent artifacts
 __pycache__/
@@ -70,4 +51,3 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .venv/
-/agent/dist/

@@ -12,8 +12,7 @@
     "lint": "oxlint .",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "test:unit": "vitest run --config vitest.unit.config.mts",
-    "test:chat-ui": "node tests/e2e/music-chat.mjs"
+    "test:unit": "vitest run --config vitest.unit.config.mts"
   },
   "dependencies": {
     "next": "16.2.4",
