@@ -1,6 +1,7 @@
 [tools]
 node = "22"
 pnpm = "latest"
+wrangler = "latest"
 
 [tasks]
 dev = "pnpm dev"

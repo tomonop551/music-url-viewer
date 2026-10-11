@@ -19,8 +19,8 @@ TOML="$ROOT/wrangler.toml"
 W="wrangler"   # 必要なら `W="mise exec -- wrangler"` 等に差し替え
 
 echo "==> create D1: music_url_viewer"
-OUT_D1=$("$W" d1 create music_url_viewer --json)
-D1_ID=$(printf '%s' "$OUT_D1" | python3 -c "import sys,json;print(json.load(sys.stdin)['result']['database_id'])" 2>/dev/null || printf '%s' "$OUT_D1" | grep -oE '[0-9a-f-]{36}')
+OUT_D1=$("$W" d1 create music_url_viewer)
+D1_ID=$(printf '%s' "$OUT_D1" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 echo "     database_id=$D1_ID"
 
 # ---- wrangler.toml のプレースホルダを置換 ----

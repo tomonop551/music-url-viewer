@@ -22,6 +22,9 @@ next-env.d.ts
 /.open-next/
 /worker-configuration.d.ts
 
+# Wrangler local state
+/.wrangler/
+
 # Test reports and coverage
 /coverage/
 /test-results/
