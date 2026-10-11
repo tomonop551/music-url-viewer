@@ -1,7 +1,6 @@
 export interface MusicUrlRecord {
   message_id: string;
   url: string;
-  user_name: string;
   timestamp: string;
   title?: string;
   dopamine?: number;

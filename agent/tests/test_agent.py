@@ -10,7 +10,7 @@ from recommender import filter_catalog, recommend, validate_reply
 
 class CatalogTests(unittest.TestCase):
     def test_provider_content_is_excluded_and_stale_metadata_is_ignored(self):
-        record = {"message_id": "demo", "url": "https://open.spotify.com/track/demo", "title": "PRIVATE_PROVIDER_TITLE", "user_name": "PRIVATE_NAME", "dopamine": Decimal(0)}
+        record = {"message_id": "demo", "url": "https://open.spotify.com/track/demo", "title": "PRIVATE_PROVIDER_TITLE", "dopamine": Decimal(0)}
         unknown = model_catalog([record], {})
         self.assertNotIn("PRIVATE", json.dumps(unknown))
         self.assertEqual(unknown[0]["dopamine"], 0)

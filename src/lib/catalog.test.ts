@@ -4,14 +4,13 @@ import { canonicalUrl, fingerprint, modelCatalog, score, type CatalogItem, type 
 const row = (over: Partial<MusicRow> = {}): MusicRow => ({
   message_id: "demo",
   url: "https://open.spotify.com/track/demo",
-  user_name: "name",
   timestamp: "2026-01-01T00:00:00Z",
   ...over,
 });
 
 describe("カタログ", () => {
   it("Provider 由来の内容は除外され、期限切れメタは無視される", async () => {
-    const record = { ...row(), title: "PRIVATE_PROVIDER_TITLE", user_name: "PRIVATE_NAME", dopamine: 0 };
+    const record = { ...row(), title: "PRIVATE_PROVIDER_TITLE", dopamine: 0 };
     const unknown = await modelCatalog([record], new Map());
     expect(JSON.stringify(unknown)).not.toContain("PRIVATE");
     expect(unknown[0].dopamine).toBe(0);

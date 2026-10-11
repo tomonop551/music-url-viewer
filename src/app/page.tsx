@@ -21,7 +21,6 @@ export default async function Home() {
   const musicUrls: MusicUrlRecord[] = validListRows(rows).map((r) => ({
     message_id: r.message_id,
     url: r.url,
-    user_name: r.user_name,
     timestamp: r.timestamp,
     ...(r.title ? { title: r.title } : {}),
     ...(typeof r.dopamine === "number" ? { dopamine: r.dopamine } : {}),

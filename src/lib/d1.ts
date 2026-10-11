@@ -16,7 +16,7 @@ export interface D1Database {
 export async function getMusicRows(db: D1Database): Promise<MusicRow[]> {
   const { results } = await db
     .prepare(
-      `SELECT message_id, url, user_name, timestamp, title, dopamine
+      `SELECT message_id, url, timestamp, title, dopamine
          FROM music_catalog ORDER BY timestamp DESC`,
     )
     .all<MusicRow>();

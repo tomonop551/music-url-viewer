@@ -4,7 +4,6 @@ import { Sha256 } from "./sha256";
 export interface MusicRow {
   message_id: string;
   url: string;
-  user_name: string;
   timestamp: string;
   title?: string | null;
   dopamine?: number | null;

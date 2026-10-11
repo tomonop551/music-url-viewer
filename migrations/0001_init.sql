@@ -13,7 +13,6 @@
 CREATE TABLE IF NOT EXISTS music_catalog (
   message_id TEXT PRIMARY KEY,               -- PK（登録 ID）
   url        TEXT NOT NULL,                  -- 正規化済み https 音源 URL
-  user_name  TEXT NOT NULL,                  -- 投稿者名
   timestamp  TEXT NOT NULL,                  -- ISO-8601（一覧はこれで降順ソート）
   title      TEXT,                           -- 投稿時タイトル（任意）
   dopamine   REAL CHECK (dopamine IS NULL OR (dopamine >= 0 AND dopamine <= 10)) -- 0–10 嗜好性

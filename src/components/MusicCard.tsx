@@ -7,10 +7,7 @@ interface MusicCardProps {
 export function MusicCard({ item }: MusicCardProps) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md hover:border-blue-100 group">
-      <div className="flex justify-between items-start mb-4">
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-          {item.user_name}
-        </span>
+      <div className="flex justify-end mb-4">
         <time className="text-xs text-gray-400">
           {new Date(item.timestamp).toLocaleDateString("ja-JP", {
             year: "numeric",
