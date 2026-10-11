@@ -23,9 +23,6 @@ export function MusicList({ initialMusicUrls }: MusicListProps) {
           <h1 className="text-4xl font-bold text-gray-900 tracking-tight sm:text-5xl">
             Music URL Viewer
           </h1>
-          <p className="mt-4 text-lg text-gray-600">
-            D1から取得した音楽URLの一覧です（1日1回更新）
-          </p>
         </div>
         <div className="mt-6 md:mt-0 md:ml-4 flex-shrink-0 flex justify-end">
           <div className="relative w-full sm:w-64">
