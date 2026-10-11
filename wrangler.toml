@@ -1,9 +1,7 @@
 # music-url-viewer — Cloudflare IaC（単一ソース: wrangler.toml）
 #
 # 設計方針は issue #1 のIaC技術選定コメントを参照。
-# アカウント層（D1 DB の作成）は scripts/setup-cloudflare.sh で初期化し、
-# 返却される ID を下のプレースホルダに埋める。実シークレットは git に入れず
-# `wrangler secret put <NAME>` で設定する。
+# 実シークレットは git に入れず `wrangler secret put <NAME>` で設定する。
 #
 # 注意: これは IaC 選定のスキャフォールド。OpenNext アダプタの成果物パス（main）と
 # 最終バインディング名は、実環境で `wrangler dev` 検証後に確定する。
@@ -36,7 +34,6 @@ AI_MODEL_ID = "@cf/moonshotai/kimi-k2.7-code"
 binding = "DB"
 database_name = "music_url_viewer"
 database_id = "426235b5-c53e-4b59-b226-9242e7d28e18"
-migrations_dir = "migrations"
 
 # ---- Workers AI ----
 # バインディングは `env.AI`（組み込み名）。route.ts が src/lib/ai.ts(bindWorkersAi) 経由で

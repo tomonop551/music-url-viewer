@@ -33,16 +33,7 @@ mise install
 mise run install
 ```
 
-### 2. Set up Cloudflare
-
-Create the D1 database (fills the binding ID in `wrangler.toml`) and apply the schema:
-
-```bash
-mise exec -- bash scripts/setup-cloudflare.sh
-mise exec -- wrangler d1 migrations apply music_url_viewer --remote
-```
-
-### 3. Run the development server
+### 2. Run the development server
 
 ```bash
 mise run dev
