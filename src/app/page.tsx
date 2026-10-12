@@ -1,19 +1,21 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+
 import { getMusicRows, type D1Database } from "@/lib/d1";
 import { validListRows } from "@/lib/catalog";
 // import { MusicChat } from "@/components/MusicChat"; // [一時停止] AIチャット（Cloudflare移行優先）
 import { MusicList } from "@/components/MusicList";
 import type { MusicUrlRecord } from "@/types/music";
 
-// Cloudflare（OpenNext on Workers）ではバインディングが process.env に注入される。
-// ハンドラ外で binding を参照できないため、関数で取得する。
 export const dynamic = "force-dynamic";
 
 // ISR（Incremental Static Regeneration）: 1 日 = 86400 秒
 export const revalidate = 86400;
 
+// D1 などのオブジェクトバインディングは process.env には注入されないため、
+// リクエストコンテキスト（getCloudflareContext）経由で取得する。
 function db(): D1Database | undefined {
-  if (!process.env.DB) return undefined;
-  return process.env.DB as unknown as D1Database;
+  const { DB } = getCloudflareContext().env as unknown as { DB?: D1Database };
+  return DB;
 }
 
 export default async function Home() {

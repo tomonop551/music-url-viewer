@@ -15,6 +15,13 @@ main = ".open-next/worker.js"
 compatibility_date = "2026-09-01"
 compatibility_flags = ["nodejs_compat"]  # OpenNext が Node 互換 API を要するため必須
 
+# OpenNext が生成した静的アセット（/_next/static/* の JS・CSS）を配信するための設定。
+# これが無いと Worker は HTML だけを返し、CSS・JS が 404 になって無装飾の画面になる。
+# binding 名 ASSETS は OpenNext が env.ASSETS として参照するため固定。
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
 # dev/preview は wrangler dev が利用。本番 URL により production 用の [env.*] を切る方針。
 workers_dev = true
 
