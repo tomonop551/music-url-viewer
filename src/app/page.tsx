@@ -30,9 +30,9 @@ export default async function Home() {
   // const chatAvailable = Boolean(process.env.DB && process.env.AI && process.env.APP_ORIGIN); // [一時停止] AIチャット
 
   return (
-    <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_390px]">
-        <section className="min-w-0"><MusicList initialMusicUrls={musicUrls} /></section>
+    <main className="min-h-screen bg-gray-50 px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
+        <MusicList initialMusicUrls={musicUrls} />
         {/* [一時停止] <MusicChat available={chatAvailable} /> */}
       </div>
     </main>

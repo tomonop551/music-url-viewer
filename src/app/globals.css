@@ -1,26 +1,22 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* 明色テーマで固定する。OS がダークモードのときブラウザが入力欄を自動で暗転させ、
+   白背景のカード上で文字が読めなくなるのを防ぐ。 */
+:root {
+  color-scheme: light;
+  /* 追従するヘッダーのぶん下げて、Tab 移動でカードに当たったとき隠れないようにする */
+  scroll-padding-top: 6rem;
 }
 
+/* 本文は日本語を含むため、和文フォントを明示して OS ごとの字面のばらつきを抑える。 */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), "Hiragino Kaku Gothic ProN", "Hiragino Sans",
+    "Noto Sans JP", Meiryo, sans-serif;
+  background-color: #f9fafb;
+  color: #111827;
 }
