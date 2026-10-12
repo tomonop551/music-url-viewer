@@ -1,7 +1,7 @@
 // D1 データアクセス層。binding 型は構造的ミニマム（@cloudflare/workers-types 非依存で単体検証可能）。
 import { z } from "zod";
 import { modelCatalog, parseFeatureRows, parseMusicRows, type CatalogItem, type FeatureRow, type MusicRow } from "./catalog";
-import type { ChatTurn } from "./recommender";
+import { parseChatHistory, type ChatTurn } from "./recommender";
 
 export interface D1PreparedStatement {
   bind(...params: unknown[]): D1PreparedStatement;
@@ -111,8 +111,7 @@ export async function getSessionHistory(db: D1Database, sessionId: string): Prom
     .first<{ history: string }>();
   if (!row) return [];
   try {
-    const parsed = JSON.parse(row.history);
-    return Array.isArray(parsed) ? (parsed as ChatTurn[]) : [];
+    return parseChatHistory(JSON.parse(row.history));
   } catch {
     return [];
   }

@@ -1,13 +1,36 @@
-export function parseChatInput(value: unknown): { message: string; reset: boolean; startNew?: boolean } {
-  if (!value || typeof value !== "object") throw new Error("Invalid input");
-  const body = value as Record<string, unknown>;
-  if (body.reset === true) return { message: "", reset: true };
-  if (typeof body.message !== "string" || !body.message.trim() || body.message.length > 1000) {
-    throw new Error("Invalid message");
-  }
-  return { message: body.message.trim(), reset: false, ...(body.startNew === true ? { startNew: true } : {}) };
+import { z } from "zod";
+
+// チャット境界の検証。ユーザー入力もモデル出力も未信頼データとして扱い、
+// ここを通ったものだけを後段（D1 への保存・UI への返却）に渡す。
+
+// 生の長さで上限を掛けてから trim する（全角空白だけの入力を空として弾く順序にするため）。
+const messageSchema = z.string().max(1000).trim().min(1);
+
+export interface ChatRequest {
+  message: string;
+  reset: boolean;
+  startNew?: boolean;
 }
 
+// リセット指示が来たら message は要求しない（reset を優先する）。
+export const chatRequestBodySchema = z.union([
+  z.object({ reset: z.literal(true) }).transform(() => ({ message: "", reset: true as const })),
+  z
+    .object({ message: messageSchema, startNew: z.boolean().optional() })
+    .transform((v) => ({
+      message: v.message,
+      reset: false as const,
+      ...(v.startNew ? { startNew: true as const } : {}),
+    })),
+]);
+
+export function parseChatInput(value: unknown): ChatRequest {
+  const parsed = chatRequestBodySchema.safeParse(value);
+  if (!parsed.success) throw new Error("Invalid input");
+  return parsed.data;
+}
+
+// URL は「スキーマで形を表す」より「型ガードとして使う」方が噛み合うため、判定関数のまま残す。
 export function safeMusicUrl(value: unknown): value is string {
   if (typeof value !== "string") return false;
   try {
@@ -17,20 +40,14 @@ export function safeMusicUrl(value: unknown): value is string {
   } catch { return false; }
 }
 
+export const agentReplySchema = z.object({
+  message: z.string().max(3000).trim().min(1),
+  recommendations: z.array(z.object({ id: z.string().min(1), reason: z.string().max(500) })),
+});
+
 export function parseAgentReply(value: unknown): { message: string; recommendations: { id: string; reason: string }[] } {
-  if (!value || typeof value !== "object") throw new Error("Invalid reply");
-  const reply = value as Record<string, unknown>;
-  if (typeof reply.message !== "string" || !reply.message.trim() || reply.message.length > 3000 || !Array.isArray(reply.recommendations)) {
-    throw new Error("Invalid reply");
-  }
-  const seen = new Set<string>();
-  const recommendations: { id: string; reason: string }[] = [];
-  for (const item of reply.recommendations) {
-    if (!item || typeof item.id !== "string" || typeof item.reason !== "string" || item.reason.length > 500) throw new Error("Invalid recommendation");
-    if (!seen.has(item.id) && recommendations.length < 3) {
-      recommendations.push({ id: item.id, reason: item.reason });
-      seen.add(item.id);
-    }
-  }
-  return { message: reply.message, recommendations };
+  const parsed = agentReplySchema.safeParse(value);
+  if (!parsed.success) throw new Error("Invalid reply");
+  const unique = [...new Map(parsed.data.recommendations.map((item) => [item.id, item])).values()];
+  return { message: parsed.data.message, recommendations: unique.slice(0, 3) };
 }

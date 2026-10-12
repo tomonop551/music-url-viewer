@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { filterCatalog, recommend, validateReply, type CallModel, type ChatInput, type ToolCall } from "./recommender";
+import { filterCatalog, recommend, TOOLS, validateReply, type CallModel, type ChatInput, type ToolCall } from "./recommender";
 import type { CatalogItem } from "./catalog";
 
 const demo: CatalogItem = { id: "demo", dopamine: 8, metadata_status: "unknown" };
@@ -70,3 +70,40 @@ describe("recommender ツールループ", () => {
 function tool(name: string, args: Record<string, unknown>): ToolCall {
   return { name, arguments: args };
 }
+
+describe("ツール定義", () => {
+  it("JSON Schema は検証と同じスキーマから生成する", () => {
+    const [search, submit] = TOOLS;
+    expect(search.parameters).toEqual({
+      type: "object",
+      properties: {
+        min_dopamine: { type: "number", minimum: 0, maximum: 10 },
+        max_dopamine: { type: "number", minimum: 0, maximum: 10 },
+      },
+      additionalProperties: false,
+    });
+    expect(submit.parameters).toEqual({
+      type: "object",
+      properties: {
+        message: { type: "string", minLength: 1, maxLength: 3000 },
+        recommendations: {
+          type: "array",
+          maxItems: 3,
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string", minLength: 1 },
+              reason: { type: "string", minLength: 1, maxLength: 500 },
+            },
+            required: ["id", "reason"],
+            additionalProperties: false,
+          },
+        },
+      },
+      required: ["message", "recommendations"],
+      additionalProperties: false,
+    });
+    // 手書き定義の時代に送っていなかったキーは載せない（受け側の解釈差を避けるため）
+    expect(search.parameters).not.toHaveProperty("$schema");
+  });
+});
