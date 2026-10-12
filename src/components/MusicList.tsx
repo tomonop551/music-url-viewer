@@ -1,33 +1,37 @@
-"use client";
-
-import { useMemo, useState } from "react";
+import Link from "next/link";
 import type { MusicUrlRecord } from "@/types/music";
 import { MusicCard } from "./MusicCard";
 
 interface MusicListProps {
-  initialMusicUrls: MusicUrlRecord[];
+  items: MusicUrlRecord[];
+  query: string;
+  page: number;
+  pageSize: number;
+  total: number;
+  lastPage: number;
 }
 
-export function MusicList({ initialMusicUrls }: MusicListProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const query = searchQuery.trim().toLowerCase();
-
-  // タイトルが未取得の行も URL で辿れるようにする（一覧は 300 件規模になる想定）。
-  const filteredUrls = useMemo(
-    () =>
-      query
-        ? initialMusicUrls.filter(
-            (item) =>
-              item.title?.toLowerCase().includes(query) ||
-              item.url.toLowerCase().includes(query),
-          )
-        : initialMusicUrls,
-    [initialMusicUrls, query],
-  );
-
+// 検索とページ送りは URL（?q=&page=）で表す。絞り込みは D1 側で済ませてあるので、
+// ここは「与えられた 1 ページを描く」だけにしてある（ブラウザ側の状態を持たない）。
+export function MusicList({ items, query, page, pageSize, total, lastPage }: MusicListProps) {
+  const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, total);
   const countLabel = query
-    ? `${initialMusicUrls.length} 曲中 ${filteredUrls.length} 曲が該当`
-    : `登録 ${initialMusicUrls.length} 曲`;
+    ? `「${query}」に一致 ${total} 曲中 ${from}〜${to} 件目`
+    : `登録 ${total} 曲中 ${from}〜${to} 件目`;
+
+  // 検索語を保ったままページだけ差し替える（1 ページ目は page を省いて URL を短く保つ）
+  const pageHref = (target: number) => {
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (target > 1) params.set("page", String(target));
+    const suffix = params.toString();
+    return suffix ? `/?${suffix}` : "/";
+  };
+
+  const pageLinkClass =
+    "rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 transition hover:bg-gray-50";
+  const pageDisabledClass = "rounded-lg border border-gray-200 px-3 py-2 text-gray-400";
 
   return (
     <>
@@ -38,84 +42,101 @@ export function MusicList({ initialMusicUrls }: MusicListProps) {
             <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
               Music URL Viewer
             </h1>
-            <p role="status" className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-gray-600">
               {countLabel}
+              {query && (
+                <>
+                  {" · "}
+                  <Link href="/" className="text-blue-700 underline decoration-blue-200 underline-offset-4">
+                    クリア
+                  </Link>
+                </>
+              )}
             </p>
           </div>
 
-          <div className="relative w-full sm:w-72">
-            <label htmlFor="music-search" className="sr-only">
-              タイトルまたはURLで検索
-            </label>
-            <svg
-              aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-            <input
-              id="music-search"
-              type="text"
-              placeholder="タイトル・URLで検索"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              className="w-full rounded-xl border border-gray-300 bg-white py-2.5 pr-9 pl-9 text-sm text-gray-900 shadow-sm transition outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery("")}
-                aria-label="検索をクリア"
-                className="absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+          {/* 素の GET フォームなので JS 無しでも送信できる（送信するとページ番号は 1 に戻る） */}
+          <form action="/" method="get" role="search" className="flex w-full items-center gap-2 sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <label htmlFor="music-search" className="sr-only">
+                タイトルまたはURLで検索
+              </label>
+              <svg
+                aria-hidden="true"
+                className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                <svg
-                  aria-hidden="true"
-                  className="h-4 w-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6l12 12M18 6L6 18" />
-                </svg>
-              </button>
-            )}
-          </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              <input
+                id="music-search"
+                type="search"
+                name="q"
+                defaultValue={query}
+                placeholder="タイトル・URLで検索"
+                className="w-full rounded-xl border border-gray-300 bg-white py-2.5 pr-3 pl-9 text-sm text-gray-900 shadow-sm transition outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+            <button
+              type="submit"
+              className="shrink-0 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              検索
+            </button>
+          </form>
         </div>
       </header>
 
-      {filteredUrls.length === 0 ? (
+      {items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-16 text-center">
           <p className="text-sm text-gray-600">
-            {initialMusicUrls.length === 0
-              ? "表示できるURLがありません。"
-              : "検索条件に一致する曲が見つかりませんでした。"}
+            {query ? "検索条件に一致する曲が見つかりませんでした。" : "表示できるURLがありません。"}
           </p>
           {query && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery("")}
-              className="mt-4 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-50"
+            <Link
+              href="/"
+              className="mt-4 inline-block rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-50"
             >
               検索をクリア
-            </button>
+            </Link>
           )}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filteredUrls.map((item) => (
+          {items.map((item) => (
             <MusicCard key={item.message_id} item={item} />
           ))}
         </div>
+      )}
+
+      {lastPage > 1 && (
+        <nav aria-label="ページ送り" className="mt-8 flex items-center justify-center gap-4 text-sm">
+          {page > 1 ? (
+            <Link href={pageHref(page - 1)} rel="prev" className={pageLinkClass}>
+              前へ
+            </Link>
+          ) : (
+            <span className={pageDisabledClass}>前へ</span>
+          )}
+          <span className="tabular-nums text-gray-600">
+            {page} / {lastPage} ページ
+          </span>
+          {page < lastPage ? (
+            <Link href={pageHref(page + 1)} rel="next" className={pageLinkClass}>
+              次へ
+            </Link>
+          ) : (
+            <span className={pageDisabledClass}>次へ</span>
+          )}
+        </nav>
       )}
     </>
   );

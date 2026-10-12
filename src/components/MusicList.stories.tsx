@@ -8,6 +8,13 @@ const meta = {
   parameters: {
     layout: 'padded',
   },
+  args: {
+    query: '',
+    page: 1,
+    pageSize: 50,
+    total: 6,
+    lastPage: 1,
+  },
 } satisfies Meta<typeof MusicList>;
 
 export default meta;
@@ -56,12 +63,44 @@ const mockUrls = [
 
 export const Default: Story = {
   args: {
-    initialMusicUrls: mockUrls,
+    items: mockUrls,
+  },
+};
+
+// 2 ページ目。前へ/次へとページ番号が出る状態。
+export const Paginated: Story = {
+  args: {
+    items: mockUrls,
+    page: 2,
+    total: 222,
+    lastPage: 5,
+  },
+};
+
+// 検索中。件数の表示とクリア導線が変わる。
+export const SearchResults: Story = {
+  args: {
+    items: mockUrls.slice(1, 3),
+    query: '花譜',
+    total: 3,
+    lastPage: 1,
   },
 };
 
 export const Empty: Story = {
   args: {
-    initialMusicUrls: [],
+    items: [],
+    total: 0,
+    lastPage: 1,
+  },
+};
+
+// 検索して 0 件。案内文とクリア導線だけになる。
+export const NoResults: Story = {
+  args: {
+    items: [],
+    query: '該当なし',
+    total: 0,
+    lastPage: 1,
   },
 };
