@@ -1,25 +1,49 @@
 // カタログ境界。Provider 由来の未信頼フィールドは catalog 出力に含めない（LLM に渡さない）。
+import { z } from "zod";
 import { Sha256 } from "./sha256";
 
-export interface MusicRow {
-  message_id: string;
-  url: string;
-  timestamp: string;
-  title?: string | null;
-  dopamine?: number | null;
+// 0–10 の有限数だけを嗜好性として通す。boolean・範囲外・NaN は「未評価」に倒す。
+// ここで null に寄せるのは、値が壊れた 1 行のせいで曲ごと一覧から消えるのを避けるため。
+export function score(value: unknown): number | null {
+  if (typeof value === "boolean" || typeof value !== "number" || !Number.isFinite(value)) return null;
+  return value >= 0 && value <= 10 ? value : null;
 }
 
-export interface FeatureRow {
-  message_id: string;
-  fingerprint: string;
-  status: string;
-  source?: string | null;
-  title?: string | null;
-  artist?: string | null;
-  tags?: string | null; // JSON 配列文字列
-  source_url?: string | null;
-  confidence?: string | null;
-}
+// D1 の all<T>() は型アサーションで中身を検証しないため、信頼の起点をこのスキーマに置く。
+// 下流（一覧表示・LLM に渡すカタログ）は検証済みの値だけを受け取る。
+// 空文字・null は「未取得」に寄せる（表示側は値の有無だけで判断できる）。
+const optionalText = z
+  .string()
+  .nullish()
+  .transform((v) => v || undefined)
+  .optional();
+
+export const musicRowSchema = z.object({
+  message_id: z.string().min(1),
+  url: z.string().min(1),
+  timestamp: z.string().min(1),
+  title: optionalText,
+  // 0–10 の有限数以外は「未評価」に倒す。値が壊れた 1 行のせいで曲ごと消えるのを避ける。
+  dopamine: z
+    .unknown()
+    .transform((v) => score(v) ?? undefined)
+    .optional(),
+});
+
+export const featureRowSchema = z.object({
+  message_id: z.string().min(1),
+  fingerprint: z.string().min(1),
+  status: z.string().min(1),
+  source: optionalText,
+  title: optionalText,
+  artist: optionalText,
+  tags: optionalText, // JSON 配列文字列
+  source_url: optionalText,
+  confidence: optionalText,
+});
+
+export type MusicRow = z.infer<typeof musicRowSchema>;
+export type FeatureRow = z.infer<typeof featureRowSchema>;
 
 export interface CatalogItem {
   id: string;
@@ -72,11 +96,6 @@ export async function fingerprint(record: { url?: unknown; title?: unknown }): P
   return Sha256.hex(JSON.stringify([record.url ?? null, record.title ?? null]));
 }
 
-export function score(value: unknown): number | null {
-  if (typeof value === "boolean" || typeof value !== "number" || !Number.isFinite(value)) return null;
-  return value >= 0 && value <= 10 ? value : null;
-}
-
 function parseTags(raw: string | null | undefined): string[] {
   if (!raw) return [];
   try {
@@ -115,6 +134,24 @@ export async function modelCatalog(
   return result;
 }
 
-export function validListRows(rows: MusicRow[]): MusicRow[] {
-  return rows.filter((r) => r.message_id && r.url && r.timestamp);
+// 形の合わない行はその行だけ落とす。1 行の破損で一覧全体を失わないため。
+// 落としたことはログに残す（黙って欠けると「データが消えた」と誤解される）。
+function parseRows<T>(schema: z.ZodType<T>, values: unknown[], label: string): T[] {
+  const rows: T[] = [];
+  let dropped = 0;
+  for (const value of values) {
+    const parsed = schema.safeParse(value);
+    if (parsed.success) rows.push(parsed.data);
+    else dropped += 1;
+  }
+  if (dropped > 0) console.warn(`[catalog] ${label} の ${dropped} 行を検証で除外しました`);
+  return rows;
+}
+
+export function parseMusicRows(values: unknown[]): MusicRow[] {
+  return parseRows(musicRowSchema, values, "music_catalog");
+}
+
+export function parseFeatureRows(values: unknown[]): FeatureRow[] {
+  return parseRows(featureRowSchema, values, "music_features");
 }

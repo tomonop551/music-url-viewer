@@ -1,5 +1,6 @@
 // D1 データアクセス層。binding 型は構造的ミニマム（@cloudflare/workers-types 非依存で単体検証可能）。
-import { modelCatalog, type CatalogItem, type FeatureRow, type MusicRow } from "./catalog";
+import { z } from "zod";
+import { modelCatalog, parseFeatureRows, parseMusicRows, type CatalogItem, type FeatureRow, type MusicRow } from "./catalog";
 import type { ChatTurn } from "./recommender";
 
 export interface D1PreparedStatement {
@@ -13,14 +14,31 @@ export interface D1Database {
   batch(statements: D1PreparedStatement[]): Promise<unknown[]>;
 }
 
+// バインディングは env から型アサーションで取り出されがちだが、欠落したまま進むと
+// 「DB は繋がっているが 0 件」として静かに正常終了する。形を確かめ、欠落はログに残す。
+const d1BindingSchema = z.custom<D1Database>(
+  (value) => {
+    const candidate = value as D1Database | undefined;
+    return typeof candidate?.prepare === "function" && typeof candidate.batch === "function";
+  },
+  { error: "getCloudflareContext().env.DB に D1 バインディングが見つかりません" },
+);
+
+export function getD1Binding(env: unknown): D1Database | undefined {
+  const parsed = z.object({ DB: d1BindingSchema }).safeParse(env);
+  if (parsed.success) return parsed.data.DB;
+  console.warn(`[d1] ${parsed.error.issues.map((issue) => issue.message).join(" / ")}`);
+  return undefined;
+}
+
 export async function getMusicRows(db: D1Database): Promise<MusicRow[]> {
   const { results } = await db
     .prepare(
       `SELECT message_id, url, timestamp, title, dopamine
          FROM music_catalog ORDER BY timestamp DESC`,
     )
-    .all<MusicRow>();
-  return results;
+    .all<unknown>();
+  return parseMusicRows(results);
 }
 
 export async function getFeatureMap(db: D1Database): Promise<Map<string, FeatureRow>> {
@@ -29,8 +47,8 @@ export async function getFeatureMap(db: D1Database): Promise<Map<string, Feature
       `SELECT message_id, fingerprint, status, source, title, artist, tags, source_url, confidence
          FROM music_features`,
     )
-    .all<FeatureRow>();
-  return new Map(results.map((r) => [r.message_id, r]));
+    .all<unknown>();
+  return new Map(parseFeatureRows(results).map((r) => [r.message_id, r]));
 }
 
 export async function getModelCatalog(db: D1Database): Promise<CatalogItem[]> {
