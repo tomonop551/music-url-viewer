@@ -15,15 +15,16 @@ main = ".open-next/worker.js"
 compatibility_date = "2026-09-01"
 compatibility_flags = ["nodejs_compat"]  # OpenNext が Node 互換 API を要するため必須
 
+# dev/preview は wrangler dev が利用。本番 URL により production 用の [env.*] を切る方針。
+# （テーブル宣言より前に置くこと。後ろに書くと [assets] のキーとして扱われる）
+workers_dev = true
+
 # OpenNext が生成した静的アセット（/_next/static/* の JS・CSS）を配信するための設定。
 # これが無いと Worker は HTML だけを返し、CSS・JS が 404 になって無装飾の画面になる。
 # binding 名 ASSETS は OpenNext が env.ASSETS として参照するため固定。
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"
-
-# dev/preview は wrangler dev が利用。本番 URL により production 用の [env.*] を切る方針。
-workers_dev = true
 
 # ---- アプリ実行時 変数 ----
 # 旧 `CHAT_TABLE_NAME`/`AGENTCORE_RUNTIME_ARN` は Cloudflare へ移行後不要になる
