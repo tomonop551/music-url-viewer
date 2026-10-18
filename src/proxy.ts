@@ -29,5 +29,7 @@ export function proxy(request: NextRequest) {
 export const config = {
   // 静的アセットを除く全ルート（HTML / RSC / API）を対象。
   // _next/data はゲート対象に残す（RSC ペイロードが漏れないように）。
-  matcher: "/((?!_next/static|_next/image|favicon.ico).*)",
+  // /api/auth/* は OAuth のコールバック先なので素通しする（Basic 認証では
+  // リダイレクトに Authorization が付かず、ここに置くと 401 で詰まる）。
+  matcher: "/((?!_next/static|_next/image|favicon.ico|api/auth).*)",
 };
