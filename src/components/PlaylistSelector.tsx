@@ -5,7 +5,7 @@ import Link from "next/link";
 import { MusicCard } from "./MusicCard";
 import { toSpotifyTrackUri, toVideoId, unusableReason } from "@/lib/playlist-url";
 import { countInPage, deselectMany, selectMany, toggleSelection } from "@/lib/selection";
-import { SpotifySignIn } from "./SpotifySignIn";
+import { SpotifyExport } from "./SpotifyExport";
 import {
   clearStoredSelection,
   loadSelectedRecordsMap,
@@ -145,7 +145,7 @@ export function PlaylistSelector({
               {countLabel} · 選択 {selected.size} 件
             </p>
             <div className="mt-2">
-              <SpotifySignIn />
+              <SpotifyExport tracks={items} selectedCount={selected.size} />
             </div>
           </div>
 
