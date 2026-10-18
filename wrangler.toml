@@ -27,11 +27,10 @@ directory = ".open-next/assets"
 binding = "ASSETS"
 
 # ---- アプリ実行時 変数 ----
-# 旧 `CHAT_TABLE_NAME`/`AGENTCORE_RUNTIME_ARN` は Cloudflare へ移行後不要になる
-# （D1/KV バインディングに置換）。残る変数をここへ集約する。
 [vars]
 APP_ORIGIN = "https://music-url-viewer.tomods1203.workers.dev"
 MUSICBRAINZ_USER_AGENT = "music-url-viewer/0.1 (+https://github.com/tomonop551/music-url-viewer)"
+OPENROUTER_MODEL = "nvidia/nemotron-3.5-super-vl:free"
 
 # ---- Basic 認証（src/proxy.ts）----
 # 平文シークレットは git に入れない。デプロイ時に `wrangler secret put` で設定する:
