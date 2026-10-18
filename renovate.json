@@ -9,26 +9,32 @@
   "dependencyDashboard": true,
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": ["before 6am on monday"]
+    "schedule": [
+      "before 6am on monday"
+    ]
   },
   "osvVulnerabilityAlerts": true,
   "packageRules": [
     {
-      "description": "Next.js は依存ライブラリの対応確認が取れるまで更新を保留 (#14)",
-      "matchPackageNames": ["next"],
-      "enabled": false
-    },
-    {
       "groupName": "storybook",
-      "matchPackageNames": ["storybook", "@storybook/{/,}**", "@chromatic-com/storybook"]
+      "matchPackageNames": [
+        "storybook",
+        "@storybook/{/,}**",
+        "@chromatic-com/storybook"
+      ]
     },
     {
       "groupName": "vitest",
-      "matchPackageNames": ["vitest", "@vitest/{/,}**"]
+      "matchPackageNames": [
+        "vitest",
+        "@vitest/{/,}**"
+      ]
     },
     {
       "groupName": "types",
-      "matchPackageNames": ["@types/{/,}**"]
+      "matchPackageNames": [
+        "@types/{/,}**"
+      ]
     }
   ]
 }
