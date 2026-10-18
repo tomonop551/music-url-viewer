@@ -28,12 +28,10 @@ binding = "ASSETS"
 
 # ---- アプリ実行時 変数 ----
 # 旧 `CHAT_TABLE_NAME`/`AGENTCORE_RUNTIME_ARN` は Cloudflare へ移行後不要になる
-# （D1/KV/Workers AI バインディングに置換）。残る変数をここへ集約する。
+# （D1/KV バインディングに置換）。残る変数をここへ集約する。
 [vars]
 APP_ORIGIN = "https://music-url-viewer.tomods1203.workers.dev"
-CHAT_DAILY_LIMIT = "200"                  # 既存 .env のデフォルト（日次枠）
 MUSICBRAINZ_USER_AGENT = "music-url-viewer/0.1 (+https://github.com/tomonop551/music-url-viewer)"
-AI_MODEL_ID = "@cf/moonshotai/kimi-k2.7-code"
 
 # ---- Basic 認証（src/proxy.ts）----
 # 平文シークレットは git に入れない。デプロイ時に `wrangler secret put` で設定する:
@@ -41,19 +39,15 @@ AI_MODEL_ID = "@cf/moonshotai/kimi-k2.7-code"
 #   wrangler secret put BASIC_AUTH_PASSWORD
 # 未設定の場合は認証ゲートが無効（素通し）になる。
 
-# ---- D1: 音楽カタログ ＋ 特徴量 ＋ 日次枠（旧: DynamoDB `MusicUrls` / `-features` / `-chat` の一部）----
-# catalog と features は message_id で常に結合するため、単一 DB に同居させる
-# （D1 はデータベース間 join が不可）。ID は `wrangler d1 create music_url_viewer` で埋める。
+# ---- D1: 音楽カタログ（旧: DynamoDB `MusicUrls` / `-features` / `-chat` の一部）----
+# features / chat_session / chat_budget の各テーブルはコード上の参照を削除済み。
+# テーブル自体は将来の enrichment や再実装に備えて D1 側に残してある。
+# catalog の行検証は message_id で結合するため、単一 DB に同居させる。
+# ID は `wrangler d1 create music_url_viewer` で埋める。
 [[d1_databases]]
 binding = "DB"
 database_name = "music_url_viewer"
 database_id = "426235b5-c53e-4b59-b226-9242e7d28e18"
-
-# ---- Workers AI ----
-# バインディングは `env.AI`（組み込み名）。route.ts が src/lib/ai.ts(bindWorkersAi) 経由で
-# function calling を呼び出す。モデルは [vars] AI_MODEL_ID。
-[ai]
-binding = "AI"
 
 # ---- 定期取り込み（旧 Lambda + EventBridge rate(15min)）----
 # 濃縮は 1 日 1 回に実施（旧 15 分間隔）。Catalog ≤300 前提なら日次で十分。
