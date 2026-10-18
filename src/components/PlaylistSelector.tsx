@@ -7,10 +7,14 @@ import { toSpotifyTrackUri, toVideoId } from "@/lib/playlist-url";
 import { countInPage, deselectMany, selectMany, toggleSelection } from "@/lib/selection";
 import {
   clearStoredSelection,
+  loadSelectedRecordsMap,
   loadStoredSelection,
+  RECORDS_KEY,
   STORAGE_KEY,
+  storeSelectedRecords,
   storeSelection,
 } from "@/lib/selection-store";
+import { toCsv } from "@/lib/csv";
 import type { MusicUrlRecord } from "@/types/music";
 
 interface PlaylistSelectorProps {
@@ -52,6 +56,12 @@ export function PlaylistSelector({
     storeSelection(selected, (value) => localStorage.setItem(STORAGE_KEY, value));
   }, [selected, restored]);
 
+  // 表示中のレコードを、選択の有無と無関係に退避する（書き出しの材料のキャッシュ）。
+  // 選択を解除しても書き出しには使える状態を保つため、依存は items のみ。
+  useEffect(() => {
+    storeSelectedRecords(items, (key, value) => localStorage.setItem(key, value));
+  }, [items]);
+
   // 判定は selection.ts の純関数に寄せる。コンポーネントは状態の受け渡しだけを担う。
   const toggle = (id: string) => setSelected((prev) => toggleSelection(prev, id));
 
@@ -69,6 +79,31 @@ export function PlaylistSelector({
       }
       return selectMany(prev, selectableIds);
     });
+  };
+
+  // 書き出しはクライアント側の Blob で完結させる（サーバに状態を持たない）。
+  // 対象の材料は退避しておいたレコードから拾うため、全件をクライアントに持たなくて済む。
+  const exportCsv = () => {
+    const records = loadSelectedRecordsMap(() => localStorage.getItem(RECORDS_KEY));
+    const rows = [...selected]
+      .map((id) => records[id])
+      .filter((r): r is NonNullable<typeof r> => r !== undefined)
+      .map((r) => ({
+        message_id: r.message_id,
+        title: r.title ?? "",
+        url: r.url,
+        timestamp: r.timestamp,
+      }));
+    if (rows.length === 0) return;
+
+    const csv = toCsv(rows, ["message_id", "title", "url", "timestamp"]);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "playlist.csv";
+    anchor.click();
+    URL.revokeObjectURL(url);
   };
 
   // 検索語を保ったままページだけ差し替える（1 ページ目は page を省いて URL を短く保つ）
@@ -143,13 +178,25 @@ export function PlaylistSelector({
         </div>
       ) : (
         <>
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={toggleAll}
               className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-50"
             >
               {allSelected ? "全解除" : "全選択"}
+            </button>
+            <button
+              type="button"
+              onClick={exportCsv}
+              disabled={selected.size === 0}
+              className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
+                selected.size === 0
+                  ? "cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
+            >
+              CSV で書き出す（{selected.size} 件）
             </button>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

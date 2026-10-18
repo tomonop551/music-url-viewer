@@ -86,7 +86,7 @@ export function storeSelectedRecords(
 // 値は message_id → レコード の形。形の合わない行だけを落とす（部分拾い）。
 export function loadSelectedRecordsMap(
   read: RawReader,
-  key: string = RECORDS_KEY,
+  _key: string = RECORDS_KEY,
 ): Record<string, SelectableRecord> {
   let raw: string | null;
   try {
