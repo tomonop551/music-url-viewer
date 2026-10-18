@@ -86,3 +86,101 @@ export async function getMusicPage(
 
   return { rows: parseMusicRows(results), total, page, pageSize, lastPage };
 }
+
+// 濃縮対象の選別に使う全行取得。一覧（ページング）とは別に、全件の title 有無を判定するため。
+export async function getMusicRows(db: D1Database): Promise<MusicRow[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT message_id, url, timestamp, title, dopamine
+         FROM music_catalog ORDER BY timestamp DESC`,
+    )
+    .all<unknown>();
+  return parseMusicRows(results);
+}
+
+// ---- AI タグ（music_ai_tags）----
+// テーブル定義は公開リポジトリに載せないため、migration ファイルは持たない。
+// 列構成は aiTagRowSchema が唯一の情報源。
+
+export interface AiTagRow {
+  message_id: string;
+  artist?: string;
+  genres?: string[];
+  moods?: string[];
+  languages?: string[];
+  era?: string;
+  ai_dopamine?: number;
+  model: string;
+  created_at: string;
+  input_fingerprint: string;
+}
+
+// D1 から読んだ行の検証。配列列（genres 等）は JSON 文字列で保存しているため、
+// 読み出し時にパースする。壊れた行は落とさず「未取得」に倒す（1 行の破損で一覧を失わないため）。
+function parseJsonArray(raw: unknown): string[] | undefined {
+  if (typeof raw !== "string" || raw === "") return undefined;
+  try {
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export async function upsertAiTags(db: D1Database, row: AiTagRow): Promise<void> {
+  await db
+    .prepare(
+      `INSERT INTO music_ai_tags
+         (message_id, artist, genres, moods, languages, era, ai_dopamine, model, created_at, input_fingerprint)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(message_id) DO UPDATE SET
+         artist = excluded.artist,
+         genres = excluded.genres,
+         moods = excluded.moods,
+         languages = excluded.languages,
+         era = excluded.era,
+         ai_dopamine = excluded.ai_dopamine,
+         model = excluded.model,
+         created_at = excluded.created_at,
+         input_fingerprint = excluded.input_fingerprint`,
+    )
+    .bind(
+      row.message_id,
+      row.artist ?? null,
+      row.genres ? JSON.stringify(row.genres) : null,
+      row.moods ? JSON.stringify(row.moods) : null,
+      row.languages ? JSON.stringify(row.languages) : null,
+      row.era ?? null,
+      row.ai_dopamine ?? null,
+      row.model,
+      row.created_at,
+      row.input_fingerprint,
+    )
+    .run();
+}
+
+// 指定した曲のタグを1件だけ読む（一覧表示の強化に使う）。無ければ null。
+export async function getAiTags(db: D1Database, messageId: string): Promise<AiTagRow | null> {
+  const row = await db
+    .prepare(
+      `SELECT message_id, artist, genres, moods, languages, era, ai_dopamine, model, created_at, input_fingerprint
+         FROM music_ai_tags WHERE message_id = ?`,
+    )
+    .bind(messageId)
+    .first<Record<string, unknown>>();
+  if (!row) return null;
+
+  const arr = (k: string) => parseJsonArray(row[k]);
+  return {
+    message_id: String(row.message_id),
+    artist: typeof row.artist === "string" ? row.artist : undefined,
+    genres: arr("genres"),
+    moods: arr("moods"),
+    languages: arr("languages"),
+    era: typeof row.era === "string" ? row.era : undefined,
+    ai_dopamine: typeof row.ai_dopamine === "number" ? row.ai_dopamine : undefined,
+    model: String(row.model),
+    created_at: String(row.created_at),
+    input_fingerprint: String(row.input_fingerprint),
+  };
+}
