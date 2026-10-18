@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MusicCard } from "./MusicCard";
-import { toSpotifyTrackUri, toVideoId } from "@/lib/playlist-url";
+import { toSpotifyTrackUri, toVideoId, unusableReason } from "@/lib/playlist-url";
 import { countInPage, deselectMany, selectMany, toggleSelection } from "@/lib/selection";
 import {
   clearStoredSelection,
@@ -67,6 +67,14 @@ export function PlaylistSelector({
 
   const selectableIds = items.map((item) => item.message_id);
   const selectedInPage = countInPage(selected, selectableIds);
+
+  // 選択不可の内訳。reasonDist は「理由 → 件数」。実測では 2 種類に収まる。
+  const unusable = items.filter((item) => toVideoId(item.url) === null && toSpotifyTrackUri(item.url) === null);
+  const reasonDist = new Map<string, number>();
+  for (const item of unusable) {
+    const reason = unusableReason(item.url, "youtube") ?? "選択できません";
+    reasonDist.set(reason, (reasonDist.get(reason) ?? 0) + 1);
+  }
 
   // 選べる曲が 1 件以上あるときだけ「全選択」を有効にする（選択は対象ページ内で完結する）
   const allSelected = selectableIds.length > 0 && selectedInPage === selectableIds.length;
@@ -209,6 +217,14 @@ export function PlaylistSelector({
               />
             ))}
           </div>
+          {/* 選択不可の内訳。実測（223 件）では理由は 2 種類に収まるため、件数とその内訳だけを見せる */}
+          {unusable.length > 0 && (
+            <p className="mt-4 text-xs text-gray-600">
+              選べない URL が {unusable.length} 件あります（
+              {[...reasonDist.entries()].map(([reason, n]) => `${reason} ${n} 件`).join("・")}
+              ）
+            </p>
+          )}
         </>
       )}
 
@@ -244,9 +260,10 @@ interface PlaylistCardProps {
 }
 
 // 選択のON/OFFをカードの左上に置く。動画 ID も Spotify track も取れない URL は、
-// どの書き出し先にも載せられないためチェックボタンごと無効化する（理由の表示は後続の刻み）。
+// どの書き出し先にも載せられないためチェックボタンごと無効化し、理由をカードに載せる。
 function PlaylistCard({ item, selected, onToggle }: PlaylistCardProps) {
   const selectable = toVideoId(item.url) !== null || toSpotifyTrackUri(item.url) !== null;
+  const reason = selectable ? null : unusableReason(item.url, "youtube") ?? "選択できません";
   return (
     <div className="relative">
       <MusicCard item={item} />
@@ -264,6 +281,14 @@ function PlaylistCard({ item, selected, onToggle }: PlaylistCardProps) {
         />
         <span className="sr-only">選択</span>
       </label>
+      {!selectable && (
+        <span
+          title={reason ?? undefined}
+          className="absolute bottom-3 left-3 z-10 max-w-[85%] truncate rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 ring-1 ring-inset ring-amber-100"
+        >
+          選べない: {reason}
+        </span>
+      )}
     </div>
   );
 }
