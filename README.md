@@ -18,7 +18,7 @@ A modern, high-performance web application built with Next.js to display music U
 
 - 検索・ページ送りを跨いで曲を選択できる（選択状態はブラウザの localStorage に置く。URL には載らない）
 - 選択できない URL（動画 ID の無い再生リスト、YouTube 以外など）はカードに理由を出す
-- 「CSV で書き出す」で選択中の曲をダウンロードする（message_id / title / url / timestamp の 4 列。BOM 付き UTF-8）
+- 「CSV で書き出す」で選択中の曲をダウンロードする（title / url の 2 列。BOM 付き UTF-8）
 
 書き出された URL の列は、YouTube Music への取り込み（別 issue: #21）や手作業の貼り付けにそのまま使える。サーバへの書き込みは無く、ダウンロードはクライアント側の Blob で完結する。
 

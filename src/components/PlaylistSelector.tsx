@@ -99,14 +99,12 @@ export function PlaylistSelector({
       .map((id) => records[id])
       .filter((r): r is NonNullable<typeof r> => r !== undefined)
       .map((r) => ({
-        message_id: r.message_id,
         title: r.title ?? "",
         url: r.url,
-        timestamp: r.timestamp,
       }));
     if (rows.length === 0) return;
 
-    const csv = toCsv(rows, ["message_id", "title", "url", "timestamp"]);
+    const csv = toCsv(rows, ["title", "url"]);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
