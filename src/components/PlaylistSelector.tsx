@@ -6,6 +6,7 @@ import { MusicCard } from "./MusicCard";
 import { toSpotifyTrackUri, toVideoId, unusableReason } from "@/lib/playlist-url";
 import { countInPage, deselectMany, selectMany, toggleSelection } from "@/lib/selection";
 import { SpotifyExport } from "./SpotifyExport";
+import { AiSuggest } from "./AiSuggest";
 import {
   clearStoredSelection,
   loadSelectedRecordsMap,
@@ -253,6 +254,11 @@ export function PlaylistSelector({
           )}
         </nav>
       )}
+
+      {/* AI 提案（issue #24）。選択に加える操作は選択状態の純関数経由 */}
+      <div className="mt-8">
+        <AiSuggest onPick={(id) => toggle(id)} />
+      </div>
     </>
   );
 }
