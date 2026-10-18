@@ -1,10 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MusicCard } from "./MusicCard";
 import { toSpotifyTrackUri, toVideoId } from "@/lib/playlist-url";
 import { countInPage, deselectMany, selectMany, toggleSelection } from "@/lib/selection";
+import {
+  clearStoredSelection,
+  loadStoredSelection,
+  STORAGE_KEY,
+  storeSelection,
+} from "@/lib/selection-store";
 import type { MusicUrlRecord } from "@/types/music";
 
 interface PlaylistSelectorProps {
@@ -31,6 +37,21 @@ export function PlaylistSelector({
 }: PlaylistSelectorProps) {
   const [selected, setSelected] = useState<Set<string>>(() => new Set(initialSelected));
 
+  // localStorage の復元はマウント後に行う。SSR の HTML と storage の値は独立しているため、
+  // 初回描画に使うと hydration の食い違いになる（初期選択は空で描き、直後に合わせ込む）。
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    setSelected(() => loadStoredSelection(() => window.localStorage.getItem(STORAGE_KEY)));
+    setRestored(true);
+  }, []);
+
+  // 選択の変化を storage へ退避する。復元の直前に空集合を書かないよう、
+  // 復元が済んでから書き込みを始める（復元→空書き込みで保存値を消す事故の予防）。
+  useEffect(() => {
+    if (!restored) return;
+    storeSelection(selected, (value) => localStorage.setItem(STORAGE_KEY, value));
+  }, [selected, restored]);
+
   // 判定は selection.ts の純関数に寄せる。コンポーネントは状態の受け渡しだけを担う。
   const toggle = (id: string) => setSelected((prev) => toggleSelection(prev, id));
 
@@ -40,7 +61,14 @@ export function PlaylistSelector({
   // 選べる曲が 1 件以上あるときだけ「全選択」を有効にする（選択は対象ページ内で完結する）
   const allSelected = selectableIds.length > 0 && selectedInPage === selectableIds.length;
   const toggleAll = () => {
-    setSelected((prev) => (allSelected ? deselectMany(prev, selectableIds) : selectMany(prev, selectableIds)));
+    setSelected((prev) => {
+      if (allSelected) {
+        // 全解除は storage の保存値も消す。残ると「解除したのに復帰する」ように見えるため
+        clearStoredSelection((key) => localStorage.removeItem(key));
+        return deselectMany(prev, selectableIds);
+      }
+      return selectMany(prev, selectableIds);
+    });
   };
 
   // 検索語を保ったままページだけ差し替える（1 ページ目は page を省いて URL を短く保つ）
@@ -70,7 +98,7 @@ export function PlaylistSelector({
               プレイリストを作る
             </h1>
             <p className="mt-1 text-sm text-gray-600">
-              {countLabel} · 選択 {selectedInPage} 件
+              {countLabel} · 選択 {selected.size} 件
             </p>
           </div>
 
