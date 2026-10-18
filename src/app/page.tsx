@@ -1,7 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 import { getD1Binding, getMusicPage, MUSIC_PAGE_SIZE } from "@/lib/d1";
-// import { MusicChat } from "@/components/MusicChat"; // [一時停止] AIチャット（Cloudflare移行優先）
 import { MusicList } from "@/components/MusicList";
 import type { MusicUrlRecord } from "@/types/music";
 
@@ -45,7 +44,6 @@ export default async function Home({
           total={musicPage.total}
           lastPage={musicPage.lastPage}
         />
-        {/* [一時停止] <MusicChat available={chatAvailable} /> */}
       </div>
     </main>
   );
