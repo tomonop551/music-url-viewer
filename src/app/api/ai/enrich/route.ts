@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { getD1Binding, getMusicRows, upsertAiTags } from "@/lib/d1";
+import { getD1Binding, getMusicRows, upsertAiTags, incrementAiBudget } from "@/lib/d1";
 import type { MusicRow } from "@/lib/catalog";
 import { buildEnrichPrompt, pickEnrichTargets } from "@/lib/ai-enrich";
 import { enrichWithOpenRouter } from "@/lib/openrouter";
+import { checkDailyLimit } from "@/lib/ai-budget";
 import { createHash } from "node:crypto";
 
 export const runtime = "nodejs";
+
+// 1 日の AI 呼び出し上限（無料枠の消費を固定する）。1 リクエスト = 1 回と数える。
+const DAILY_LIMIT = 10;
 
 const bodySchema = z.object({
   // 1 回の実行で処理する件数の上限（opt-in の手動実行。勝手に全部を回さない）
@@ -33,6 +37,20 @@ export async function POST(request: Request) {
   const db = getD1Binding(env);
   if (!db) {
     return NextResponse.json({ error: "D1 に接続できません" }, { status: 503 });
+  }
+
+  // 実行の前に当日回数を加算し、上限に達していたら拒否する。
+  // 加算を先にするのは、同時リクエストでも上限を超えて実行させないため
+  // （拒否された分はカウンタに残るが、日付が変われば数え直す）。
+  // 日付は JST 固定（Workers は UTC のため、そのままの toISOString では日本の「今日」とずれる）。
+  const nowJst = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const count = await incrementAiBudget(db, nowJst);
+  const budget = checkDailyLimit({ count, limit: DAILY_LIMIT });
+  if (!budget.allowed) {
+    return NextResponse.json(
+      { error: `本日の AI 呼び出しは上限（${DAILY_LIMIT} 回）に達しました` },
+      { status: 429 },
+    );
   }
 
   const apiKey = process.env.OPENROUTER_API_KEY;

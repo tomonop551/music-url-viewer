@@ -159,6 +159,21 @@ export async function upsertAiTags(db: D1Database, row: AiTagRow): Promise<void>
     .run();
 }
 
+// AI 呼び出しの当日回数を原子的に加算し、新しい count を返す（1 リクエスト = 1 回）。
+// テーブルは古いチャットの予算テーブルを転用せず、新しい用途として music_ai_budget を作る
+// （列の意味が変わる転用は、後から読む人が誤解するため）。
+export async function incrementAiBudget(db: D1Database, day: string): Promise<number> {
+  const row = await db
+    .prepare(
+      `INSERT INTO music_ai_budget(day, count) VALUES(?, 1)
+       ON CONFLICT(day) DO UPDATE SET count = count + 1
+       RETURNING count`,
+    )
+    .bind(day)
+    .first<{ count: number }>();
+  return row?.count ?? 1;
+}
+
 // 指定した曲のタグを1件だけ読む（一覧表示の強化に使う）。無ければ null。
 export async function getAiTags(db: D1Database, messageId: string): Promise<AiTagRow | null> {
   const row = await db
