@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { MusicCard } from "./MusicCard";
 import { toSpotifyTrackUri, toVideoId } from "@/lib/playlist-url";
+import { countInPage, deselectMany, selectMany, toggleSelection } from "@/lib/selection";
 import type { MusicUrlRecord } from "@/types/music";
 
 interface PlaylistSelectorProps {
@@ -30,31 +31,16 @@ export function PlaylistSelector({
 }: PlaylistSelectorProps) {
   const [selected, setSelected] = useState<Set<string>>(() => new Set(initialSelected));
 
-  // 選択の操作はこのコンポーネント内で完結する。サーバには何も書かない。
-  const toggle = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  // 判定は selection.ts の純関数に寄せる。コンポーネントは状態の受け渡しだけを担う。
+  const toggle = (id: string) => setSelected((prev) => toggleSelection(prev, id));
 
   const selectableIds = items.map((item) => item.message_id);
-  const selectedInPage = selectableIds.filter((id) => selected.has(id)).length;
+  const selectedInPage = countInPage(selected, selectableIds);
 
   // 選べる曲が 1 件以上あるときだけ「全選択」を有効にする（選択は対象ページ内で完結する）
   const allSelected = selectableIds.length > 0 && selectedInPage === selectableIds.length;
   const toggleAll = () => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (allSelected) {
-        for (const id of selectableIds) next.delete(id);
-      } else {
-        for (const id of selectableIds) next.add(id);
-      }
-      return next;
-    });
+    setSelected((prev) => (allSelected ? deselectMany(prev, selectableIds) : selectMany(prev, selectableIds)));
   };
 
   // 検索語を保ったままページだけ差し替える（1 ページ目は page を省いて URL を短く保つ）
