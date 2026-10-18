@@ -2,6 +2,10 @@ import NextAuth from "next-auth";
 import Spotify from "next-auth/providers/spotify";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Workers（OpenNext）経由では x-forwarded-host が付かない非プロキシ環境があり、
+  // 既定の trustHost 判定で UntrustedHost になる。Host の供給元は Workers の
+  // routes 設定に限定されるため、ここで明示的に信頼する
+  trustHost: true,
   providers: [
     Spotify({
       clientId: process.env.AUTH_SPOTIFY_ID,
