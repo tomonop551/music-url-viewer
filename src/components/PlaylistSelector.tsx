@@ -1,10 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MusicCard } from "./MusicCard";
-import { toSpotifyTrackUri, toVideoId } from "@/lib/playlist-url";
+import { toSpotifyTrackUri, toVideoId, unusableReason } from "@/lib/playlist-url";
 import { countInPage, deselectMany, selectMany, toggleSelection } from "@/lib/selection";
+import {
+  clearStoredSelection,
+  loadSelectedRecordsMap,
+  loadStoredSelection,
+  RECORDS_KEY,
+  STORAGE_KEY,
+  storeSelectedRecords,
+  storeSelection,
+} from "@/lib/selection-store";
+import { toCsv } from "@/lib/csv";
 import type { MusicUrlRecord } from "@/types/music";
 
 interface PlaylistSelectorProps {
@@ -31,16 +41,77 @@ export function PlaylistSelector({
 }: PlaylistSelectorProps) {
   const [selected, setSelected] = useState<Set<string>>(() => new Set(initialSelected));
 
+  // localStorage の復元はマウント後に行う。SSR の HTML と storage の値は独立しているため、
+  // 初回描画に使うと hydration の食い違いになる（初期選択は空で描き、直後に合わせ込む）。
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    setSelected(() => loadStoredSelection(() => window.localStorage.getItem(STORAGE_KEY)));
+    setRestored(true);
+  }, []);
+
+  // 選択の変化を storage へ退避する。復元の直前に空集合を書かないよう、
+  // 復元が済んでから書き込みを始める（復元→空書き込みで保存値を消す事故の予防）。
+  useEffect(() => {
+    if (!restored) return;
+    storeSelection(selected, (value) => localStorage.setItem(STORAGE_KEY, value));
+  }, [selected, restored]);
+
+  // 表示中のレコードを、選択の有無と無関係に退避する（書き出しの材料のキャッシュ）。
+  // 選択を解除しても書き出しには使える状態を保つため、依存は items のみ。
+  useEffect(() => {
+    storeSelectedRecords(items, (key, value) => localStorage.setItem(key, value));
+  }, [items]);
+
   // 判定は selection.ts の純関数に寄せる。コンポーネントは状態の受け渡しだけを担う。
   const toggle = (id: string) => setSelected((prev) => toggleSelection(prev, id));
 
   const selectableIds = items.map((item) => item.message_id);
   const selectedInPage = countInPage(selected, selectableIds);
 
+  // 選択不可の内訳。reasonDist は「理由 → 件数」。実測では 2 種類に収まる。
+  const unusable = items.filter((item) => toVideoId(item.url) === null && toSpotifyTrackUri(item.url) === null);
+  const reasonDist = new Map<string, number>();
+  for (const item of unusable) {
+    const reason = unusableReason(item.url, "youtube") ?? "選択できません";
+    reasonDist.set(reason, (reasonDist.get(reason) ?? 0) + 1);
+  }
+
   // 選べる曲が 1 件以上あるときだけ「全選択」を有効にする（選択は対象ページ内で完結する）
   const allSelected = selectableIds.length > 0 && selectedInPage === selectableIds.length;
   const toggleAll = () => {
-    setSelected((prev) => (allSelected ? deselectMany(prev, selectableIds) : selectMany(prev, selectableIds)));
+    setSelected((prev) => {
+      if (allSelected) {
+        // 全解除は storage の保存値も消す。残ると「解除したのに復帰する」ように見えるため
+        clearStoredSelection((key) => localStorage.removeItem(key));
+        return deselectMany(prev, selectableIds);
+      }
+      return selectMany(prev, selectableIds);
+    });
+  };
+
+  // 書き出しはクライアント側の Blob で完結させる（サーバに状態を持たない）。
+  // 対象の材料は退避しておいたレコードから拾うため、全件をクライアントに持たなくて済む。
+  const exportCsv = () => {
+    const records = loadSelectedRecordsMap(() => localStorage.getItem(RECORDS_KEY));
+    const rows = [...selected]
+      .map((id) => records[id])
+      .filter((r): r is NonNullable<typeof r> => r !== undefined)
+      .map((r) => ({
+        message_id: r.message_id,
+        title: r.title ?? "",
+        url: r.url,
+        timestamp: r.timestamp,
+      }));
+    if (rows.length === 0) return;
+
+    const csv = toCsv(rows, ["message_id", "title", "url", "timestamp"]);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "playlist.csv";
+    anchor.click();
+    URL.revokeObjectURL(url);
   };
 
   // 検索語を保ったままページだけ差し替える（1 ページ目は page を省いて URL を短く保つ）
@@ -70,7 +141,7 @@ export function PlaylistSelector({
               プレイリストを作る
             </h1>
             <p className="mt-1 text-sm text-gray-600">
-              {countLabel} · 選択 {selectedInPage} 件
+              {countLabel} · 選択 {selected.size} 件
             </p>
           </div>
 
@@ -115,13 +186,25 @@ export function PlaylistSelector({
         </div>
       ) : (
         <>
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={toggleAll}
               className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-50"
             >
               {allSelected ? "全解除" : "全選択"}
+            </button>
+            <button
+              type="button"
+              onClick={exportCsv}
+              disabled={selected.size === 0}
+              className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
+                selected.size === 0
+                  ? "cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
+            >
+              CSV で書き出す（{selected.size} 件）
             </button>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -134,6 +217,14 @@ export function PlaylistSelector({
               />
             ))}
           </div>
+          {/* 選択不可の内訳。実測（223 件）では理由は 2 種類に収まるため、件数とその内訳だけを見せる */}
+          {unusable.length > 0 && (
+            <p className="mt-4 text-xs text-gray-600">
+              選べない URL が {unusable.length} 件あります（
+              {[...reasonDist.entries()].map(([reason, n]) => `${reason} ${n} 件`).join("・")}
+              ）
+            </p>
+          )}
         </>
       )}
 
@@ -169,9 +260,10 @@ interface PlaylistCardProps {
 }
 
 // 選択のON/OFFをカードの左上に置く。動画 ID も Spotify track も取れない URL は、
-// どの書き出し先にも載せられないためチェックボタンごと無効化する（理由の表示は後続の刻み）。
+// どの書き出し先にも載せられないためチェックボタンごと無効化し、理由をカードに載せる。
 function PlaylistCard({ item, selected, onToggle }: PlaylistCardProps) {
   const selectable = toVideoId(item.url) !== null || toSpotifyTrackUri(item.url) !== null;
+  const reason = selectable ? null : unusableReason(item.url, "youtube") ?? "選択できません";
   return (
     <div className="relative">
       <MusicCard item={item} />
@@ -189,6 +281,14 @@ function PlaylistCard({ item, selected, onToggle }: PlaylistCardProps) {
         />
         <span className="sr-only">選択</span>
       </label>
+      {!selectable && (
+        <span
+          title={reason ?? undefined}
+          className="absolute bottom-3 left-3 z-10 max-w-[85%] truncate rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 ring-1 ring-inset ring-amber-100"
+        >
+          選べない: {reason}
+        </span>
+      )}
     </div>
   );
 }

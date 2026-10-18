@@ -36,6 +36,11 @@ export default async function Home({
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
+        <p className="mb-4 text-sm">
+          <a href="/playlists" className="text-blue-700 underline decoration-blue-200 underline-offset-4">
+            プレイリストを作る →
+          </a>
+        </p>
         <MusicList
           items={musicUrls}
           query={query}
