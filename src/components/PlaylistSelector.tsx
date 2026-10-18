@@ -269,16 +269,15 @@ interface PlaylistCardProps {
   onToggle: () => void;
 }
 
-// 選択のON/OFFをカードの左上に置く。動画 ID も Spotify track も取れない URL は、
-// どの書き出し先にも載せられないためチェックボタンごと無効化し、理由をカードに載せる。
+// チェックボックスはカードの左端に置く。カード全面は曲へのリンクの当たり判定に
+// なっているため、上に重ねた UI は誤クリックで曲ページに飛ぶ。
 function PlaylistCard({ item, selected, onToggle }: PlaylistCardProps) {
   const selectable = toVideoId(item.url) !== null || toSpotifyTrackUri(item.url) !== null;
   const reason = selectable ? null : unusableReason(item.url, "youtube") ?? "選択できません";
   return (
-    <div className="relative">
-      <MusicCard item={item} />
+    <div className="flex items-stretch gap-2">
       <label
-        className={`absolute top-3 left-3 z-10 flex items-center gap-1.5 rounded-full bg-white/90 px-2 py-1 shadow-sm ring-1 ring-gray-200 ${
+        className={`flex w-6 shrink-0 items-start justify-center pt-5 ${
           selectable ? "cursor-pointer" : "cursor-not-allowed opacity-40"
         }`}
       >
@@ -287,18 +286,19 @@ function PlaylistCard({ item, selected, onToggle }: PlaylistCardProps) {
           checked={selected}
           onChange={onToggle}
           disabled={!selectable}
+          title={reason ?? undefined}
           className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-200"
         />
         <span className="sr-only">選択</span>
       </label>
-      {!selectable && (
-        <span
-          title={reason ?? undefined}
-          className="absolute bottom-3 left-3 z-10 max-w-[85%] truncate rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 ring-1 ring-inset ring-amber-100"
-        >
-          選べない: {reason}
-        </span>
-      )}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex-1">
+          <MusicCard item={item} />
+        </div>
+        {!selectable && reason && (
+          <p className="mt-1 break-words px-1 text-[11px] text-amber-800">{reason}</p>
+        )}
+      </div>
     </div>
   );
 }
