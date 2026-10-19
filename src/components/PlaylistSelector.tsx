@@ -255,7 +255,11 @@ export function PlaylistSelector({
 
       {/* AI 提案（issue #24）。選択に加える操作は選択状態の純関数経由 */}
       <div className="mt-8">
-        <AiSuggest onPick={(id) => toggle(id)} />
+        <AiSuggest
+          onPick={(id) => toggle(id)}
+          urlById={Object.fromEntries(items.map((i) => [i.message_id, i.url]))}
+          titleById={Object.fromEntries(items.map((i) => [i.message_id, i.title ?? i.url]))}
+        />
       </div>
     </>
   );

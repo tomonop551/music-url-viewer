@@ -72,11 +72,7 @@ export async function callOpenRouter<T>(
 
   let data: OpenRouterResponse;
   try {
-    const rawText = await res.text();
-    // [一時デバッグ] 生応答をログへ流す（issue 調査用・落ち着いたら外す）。
-    // ユーザ情報は含まれない（テーマと候補の title のみを送っているため）。
-    console.log(`[openrouter] status=${res.status} content-type=${res.headers.get("content-type")} body=${rawText.slice(0, 1000)}`);
-    data = chatCompletionSchema.parse(JSON.parse(rawText));
+    data = chatCompletionSchema.parse(await res.json());
   } catch {
     return { ok: false, error: "OpenRouter の応答を解釈できません" };
   }
