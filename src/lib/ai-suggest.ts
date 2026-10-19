@@ -62,6 +62,41 @@ export interface SuggestCandidate {
   moods?: string[];
 }
 
+// 候補の組み立て。タグのある曲を優先し、足りない分を新しい順で埋めて上限までに抑える
+// （候補を全件渡すと AI の応答待ちが長くなり、Workers の応答時間上限で失敗するため）。
+// タグは map で一括渡しする（ループ内で曲ごとに D1 を叩かない）。
+export function buildSuggestCandidates<Row extends MusicRowLike>(
+  rows: Row[],
+  tagsMap: Map<string, SuggestCandidate>,
+  limit: number,
+): SuggestCandidate[] {
+  const tagged: SuggestCandidate[] = [];
+  const untagged: SuggestCandidate[] = [];
+  for (const row of rows) {
+    if (typeof row.title !== "string" || row.title.trim() === "") continue;
+    const tags = tagsMap.get(row.message_id);
+    const candidate: SuggestCandidate = {
+      message_id: row.message_id,
+      title: row.title,
+      artist: tags?.artist,
+      genres: tags?.genres,
+      moods: tags?.moods,
+    };
+    (tags ? tagged : untagged).push(candidate);
+  }
+
+  // 新しい順（rows は timestamp DESC で来る前提なので、この順のまま使う）
+  const picked = [...tagged, ...untagged].slice(0, limit);
+  return picked;
+}
+
+// d1.ts の MusicRow と同じ形（循環 import を避けるための構造的な最小限）。
+interface MusicRowLike {
+  message_id: string;
+  title?: string | null;
+  timestamp: string;
+}
+
 export function buildSuggestPrompt(theme: string, candidates: SuggestCandidate[]): string {
   const lines = [
     `テーマ「${theme}」に合う曲を、下の候補から最大 3 つ選んで提案してください。`,

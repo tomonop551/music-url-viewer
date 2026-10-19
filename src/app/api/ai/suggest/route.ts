@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { getD1Binding, getMusicRows, getAiTags } from "@/lib/d1";
-import { buildSuggestPrompt, parseSuggestions, SUGGEST_SCHEMA, type SuggestCandidate } from "@/lib/ai-suggest";
+import { getD1Binding, getMusicRows, getAiTagsMap } from "@/lib/d1";
+import { buildSuggestCandidates, buildSuggestPrompt, parseSuggestions, SUGGEST_SCHEMA } from "@/lib/ai-suggest";
 import { enrichWithOpenRouter } from "@/lib/openrouter";
 
 export const runtime = "nodejs";
@@ -10,6 +10,9 @@ export const runtime = "nodejs";
 const bodySchema = z.object({
   theme: z.string().min(1).max(100),
 });
+
+// AI に渡す候補の上限。多すぎると応答待ちが伸び、Workers の応答時間上限に触れるため。
+const SUGGEST_CANDIDATE_LIMIT = 50;
 
 export async function POST(request: Request) {
   const { env } = getCloudflareContext();
@@ -35,20 +38,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "テーマを入力してください" }, { status: 400 });
   }
 
-  // 候補は濃縮済みタグのある曲を優先して渡す（タグが無い曲は title のみの候補になる）
+  // 候補は1クエリで組み立てる（曲ごとの D1 呼び出しはサブリクエスト上限にかかるため）。
+  // AI に渡す候補は上限までに抑え、応答待ちを短く保つ。
   const rows = await getMusicRows(db);
-  const candidates: SuggestCandidate[] = [];
-  for (const row of rows) {
-    if (typeof row.title !== "string" || row.title.trim() === "") continue;
-    const tags = await getAiTags(db, row.message_id);
-    candidates.push({
-      message_id: row.message_id,
-      title: row.title,
-      artist: tags?.artist,
-      genres: tags?.genres,
-      moods: tags?.moods,
-    });
-  }
+  const titleRows = rows.filter((r) => typeof r.title === "string");
+  const tagsMap = await getAiTagsMap(db, titleRows.map((r) => r.message_id));
+  const candidates = buildSuggestCandidates(rows, tagsMap, SUGGEST_CANDIDATE_LIMIT);
   if (candidates.length === 0) {
     return NextResponse.json({ error: "候補となる曲がありません" }, { status: 400 });
   }
