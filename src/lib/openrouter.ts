@@ -1,11 +1,25 @@
-import { aiTagsSchema, type AiTags } from "./ai-enrich";
+import { z } from "zod";
 
 // OpenRouter の chat completions API。JSON schema での structured outputs を要求する。
 // API キーは wrangler secret（OPENROUTER_API_KEY）で渡す。
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-interface OpenRouterResponse {
-  choices: { message: { content: string } }[];
+// OpenRouter の応答の型（OpenAI 互換）。content は JSON 文字列で返るため、
+// 呼び出し側が渡す zod スキーマで二段階にパースする。
+const chatCompletionSchema = z.object({
+  choices: z
+    .array(
+      z.object({
+        message: z.object({
+          content: z.string().nullable(),
+        }),
+      }),
+    )
+    .min(1),
+});
+
+export interface OpenRouterResponse {
+  choices: { message: { content: string | null } }[];
 }
 
 interface EnrichOptions {
@@ -17,15 +31,14 @@ interface EnrichOptions {
   timeoutMs?: number;
 }
 
-type EnrichResult = { ok: true; tags: AiTags } | { ok: false; error: string; status?: number };
-
-// 1 曲の推定を OpenRouter に依頼する。失敗は例外でなく結果オブジェクトで返す
-// （バッチで複数曲を回すため、1 曲の失敗で全体を止めない）。
-export async function enrichWithOpenRouter(
+// 1 回の AI 呼び出し。応答の content は、渡された zod スキーマで検証する
+// （濃縮と提案で応答の型が違うため。structured outputs の schema と対応させる）。
+export async function callOpenRouter<T>(
   opts: EnrichOptions,
   schemaName: string,
   schema: object,
-): Promise<EnrichResult> {
+  contentSchema: z.ZodType<T>,
+): Promise<{ ok: true; data: T } | { ok: false; error: string; status?: number }> {
   let res: Response;
   try {
     res = await fetch(OPENROUTER_URL, {
@@ -43,6 +56,9 @@ export async function enrichWithOpenRouter(
           type: "json_schema",
           json_schema: { name: schemaName, strict: true, schema },
         },
+        // structured outputs 非対応の provider へのルーティングを避ける
+        // （schema を無視した自由文の応答が返るのを防ぐため）
+        provider: { require_parameters: true },
       }),
       signal: AbortSignal.timeout(opts.timeoutMs ?? 30_000),
     });
@@ -56,19 +72,23 @@ export async function enrichWithOpenRouter(
 
   let data: OpenRouterResponse;
   try {
-    data = (await res.json()) as OpenRouterResponse;
+    const rawText = await res.text();
+    // [一時デバッグ] 生応答をログへ流す（issue 調査用・落ち着いたら外す）。
+    // ユーザ情報は含まれない（テーマと候補の title のみを送っているため）。
+    console.log(`[openrouter] status=${res.status} content-type=${res.headers.get("content-type")} body=${rawText.slice(0, 1000)}`);
+    data = chatCompletionSchema.parse(JSON.parse(rawText));
   } catch {
     return { ok: false, error: "OpenRouter の応答を解釈できません" };
   }
 
-  const content = data.choices?.[0]?.message?.content;
-  if (typeof content !== "string") {
+  const content = data.choices[0].message.content;
+  if (typeof content !== "string" || content === "") {
     return { ok: false, error: "OpenRouter の応答が空です" };
   }
 
   try {
     const parsed = JSON.parse(content);
-    return { ok: true, tags: aiTagsSchema.parse(parsed) };
+    return { ok: true, data: contentSchema.parse(parsed) };
   } catch {
     return { ok: false, error: "AI の応答が想定した形式ではありません" };
   }
