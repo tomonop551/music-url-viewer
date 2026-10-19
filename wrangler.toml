@@ -30,7 +30,7 @@ binding = "ASSETS"
 [vars]
 APP_ORIGIN = "https://music-url-viewer.tomods1203.workers.dev"
 MUSICBRAINZ_USER_AGENT = "music-url-viewer/0.1 (+https://github.com/tomonop551/music-url-viewer)"
-OPENROUTER_MODEL = "nvidia/nemotron-3.5-super-vl:free"
+OPENROUTER_MODEL = "google/gemma-4-26b-a4b-it:free"
 
 # ---- Basic 認証（src/proxy.ts）----
 # 平文シークレットは git に入れない。デプロイ時に `wrangler secret put` で設定する:
