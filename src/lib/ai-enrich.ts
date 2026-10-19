@@ -27,6 +27,18 @@ export function parseAiTags(value: unknown): AiTags {
   return aiTagsSchema.parse(value);
 }
 
+// 提案（#24）の応答。message_id と reason の配列。候補外の id は route 側で落とす。
+export const suggestionsSchema = z.object({
+  recommendations: z
+    .array(
+      z.object({
+        message_id: z.string(),
+        reason: z.string().optional().default(""),
+      }),
+    )
+    .optional(),
+});
+
 // 入力は title のみ。URL のクエリ（トラッキングパラメータ）や本文は AI に渡さない。
 export function buildEnrichPrompt(record: { title?: string }): string {
   return [

@@ -3,7 +3,8 @@ import { z } from "zod";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getD1Binding, getMusicRows, getAiTagsMap } from "@/lib/d1";
 import { buildSuggestCandidates, buildSuggestPrompt, parseSuggestions, SUGGEST_SCHEMA } from "@/lib/ai-suggest";
-import { enrichWithOpenRouter } from "@/lib/openrouter";
+import { suggestionsSchema } from "@/lib/ai-enrich";
+import { callOpenRouter } from "@/lib/openrouter";
 
 export const runtime = "nodejs";
 
@@ -51,12 +52,12 @@ export async function POST(request: Request) {
   }
 
   const prompt = buildSuggestPrompt(parsed.data.theme, candidates);
-  const res = await enrichWithOpenRouter({ apiKey, model, prompt }, "playlist_suggest", SUGGEST_SCHEMA);
+  const res = await callOpenRouter({ apiKey, model, prompt }, "playlist_suggest", SUGGEST_SCHEMA, suggestionsSchema);
   if (!res.ok) {
     return NextResponse.json({ error: res.error }, { status: 502 });
   }
 
   const allowed = new Set(candidates.map((c) => c.message_id));
-  const suggestions = parseSuggestions({ recommendations: res.tags }, allowed);
+  const suggestions = parseSuggestions(res.data, allowed);
   return NextResponse.json({ theme: parsed.data.theme, suggestions });
 }

@@ -3,8 +3,8 @@ import { z } from "zod";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getD1Binding, getMusicRows, upsertAiTags, incrementAiBudget } from "@/lib/d1";
 import type { MusicRow } from "@/lib/catalog";
-import { buildEnrichPrompt, pickEnrichTargets } from "@/lib/ai-enrich";
-import { enrichWithOpenRouter } from "@/lib/openrouter";
+import { buildEnrichPrompt, pickEnrichTargets, aiTagsSchema } from "@/lib/ai-enrich";
+import { callOpenRouter } from "@/lib/openrouter";
 import { checkDailyLimit } from "@/lib/ai-budget";
 import { createHash } from "node:crypto";
 
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     const prompt = buildEnrichPrompt(row);
     const fingerprint = createHash("sha256").update(`${row.url}\n${row.title ?? ""}`).digest("hex");
 
-    const res = await enrichWithOpenRouter({ apiKey, model, prompt }, "catalog_tags", responseSchema);
+    const res = await callOpenRouter({ apiKey, model, prompt }, "catalog_tags", responseSchema, aiTagsSchema);
     if (!res.ok) {
       results.push({ message_id: row.message_id, ok: false, error: res.error });
       continue;
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
 
     await upsertAiTags(db, {
       message_id: row.message_id,
-      ...res.tags,
+      ...res.data,
       model,
       created_at: new Date().toISOString(),
       input_fingerprint: fingerprint,
