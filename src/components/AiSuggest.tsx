@@ -10,11 +10,14 @@ interface Suggestion {
 interface AiSuggestProps {
   // 選択中の曲に提案を追加できるよう、選択状態の操作を受け取る
   onPick?: (messageId: string) => void;
+  // 提案の表示とリンク先に使う対応表（message_id → title / url）
+  urlById: Record<string, string>;
+  titleById: Record<string, string>;
 }
 
 // テーマを渡すと AI が候補の中から選曲して提案する。
 // 提案は候補の中からしか選ばれないため、存在しない曲が出ることはない（route 側で濾過済み）。
-export function AiSuggest({ onPick }: AiSuggestProps) {
+export function AiSuggest({ onPick, urlById, titleById }: AiSuggestProps) {
   const [theme, setTheme] = useState("");
   const [busy, setBusy] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[] | null>(null);
@@ -84,8 +87,15 @@ export function AiSuggest({ onPick }: AiSuggestProps) {
           {suggestions.map((s) => (
             <li key={s.message_id} className="flex items-center justify-between gap-2 rounded-lg bg-gray-50 px-3 py-2">
               <div className="min-w-0">
-                <p className="truncate text-sm text-gray-900">{s.reason}</p>
-                <p className="text-[11px] text-gray-500">message_id: {s.message_id}</p>
+                <a
+                  href={urlById[s.message_id]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block truncate text-sm font-medium text-gray-900 hover:text-blue-700 hover:underline"
+                >
+                  {titleById[s.message_id] ?? "(無題)"}
+                </a>
+                <p className="mt-0.5 text-xs text-gray-600">{s.reason}</p>
               </div>
               {onPick && (
                 <button
