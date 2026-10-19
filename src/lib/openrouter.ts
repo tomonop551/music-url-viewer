@@ -56,6 +56,9 @@ export async function callOpenRouter<T>(
           type: "json_schema",
           json_schema: { name: schemaName, strict: true, schema },
         },
+        // structured outputs 非対応の provider へのルーティングを避ける
+        // （schema を無視した自由文の応答が返るのを防ぐため）
+        provider: { require_parameters: true },
       }),
       signal: AbortSignal.timeout(opts.timeoutMs ?? 30_000),
     });
