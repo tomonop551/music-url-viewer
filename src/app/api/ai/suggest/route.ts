@@ -40,10 +40,12 @@ export async function POST(request: Request) {
 
   // 候補は1クエリで組み立てる（曲ごとの D1 呼び出しはサブリクエスト上限にかかるため）。
   // AI に渡す候補は上限までに抑え、応答待ちを短く保つ。
+  // タグの取得は候補を絞った後に行う（223 件を IN 句に渡すと
+  // SQLite の変数上限を超え、D1_ERROR: too many SQL variables になるため）。
   const rows = await getMusicRows(db);
-  const titleRows = rows.filter((r) => typeof r.title === "string");
-  const tagsMap = await getAiTagsMap(db, titleRows.map((r) => r.message_id));
-  const candidates = buildSuggestCandidates(rows, tagsMap, SUGGEST_CANDIDATE_LIMIT);
+  const preCandidates = buildSuggestCandidates(rows, new Map(), SUGGEST_CANDIDATE_LIMIT);
+  const tagsMap = await getAiTagsMap(db, preCandidates.map((c) => c.message_id));
+  const candidates = buildSuggestCandidates(preCandidates, tagsMap, SUGGEST_CANDIDATE_LIMIT);
   if (candidates.length === 0) {
     return NextResponse.json({ error: "候補となる曲がありません" }, { status: 400 });
   }

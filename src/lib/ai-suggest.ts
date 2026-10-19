@@ -91,10 +91,11 @@ export function buildSuggestCandidates<Row extends MusicRowLike>(
 }
 
 // d1.ts の MusicRow と同じ形（循環 import を避けるための構造的な最小限）。
+// 絞り込み済みの候補（SuggestCandidate）を再入力にできるよう、timestamp は任意。
 interface MusicRowLike {
   message_id: string;
   title?: string | null;
-  timestamp: string;
+  timestamp?: string;
 }
 
 export function buildSuggestPrompt(theme: string, candidates: SuggestCandidate[]): string {
