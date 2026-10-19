@@ -51,7 +51,12 @@ export function AiSuggest({ onPick }: AiSuggestProps) {
           type="text"
           value={theme}
           onChange={(e) => setTheme(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && suggest()}
+          onKeyDown={(e) => {
+            // IME の変換確定の Enter は送信に使わない（「今日」の変換確定で
+            // 意図しない送信が走るため。isComposing の間は無視する）
+            if (e.nativeEvent.isComposing) return;
+            if (e.key === "Enter") suggest();
+          }}
           placeholder="テーマを入力（例: 雨の日に聴きたい）"
           className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
         />
