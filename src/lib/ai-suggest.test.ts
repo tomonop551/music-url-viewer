@@ -1,66 +1,61 @@
 import { describe, expect, it } from "vitest";
-import { buildSuggestPrompt, parseSuggestions, SUGGEST_SCHEMA } from "./ai-suggest";
+import { buildSuggestCandidates } from "./ai-suggest";
+import type { AiTagRow } from "./d1";
+import type { MusicRow } from "./catalog";
 
-// AI の提案は「候補の中から選ばせる」。候補に無い message_id が返ってきたら
-// それは AI の幻覚なので、画面に出す前に落とす。
-describe("提案応答の検証", () => {
-  const allowed = new Set(["a", "b", "c"]);
-
-  it("候補内の message_id を持つ提案を受け入れる", () => {
-    const parsed = parseSuggestions(
-      { recommendations: [{ message_id: "a", reason: "雨の日に合う" }] },
-      allowed,
-    );
-    expect(parsed).toEqual([{ message_id: "a", reason: "雨の日に合う" }]);
-  });
-
-  it("候補に無い message_id は落とす（AI の幻覚対策）", () => {
-    const parsed = parseSuggestions(
-      {
-        recommendations: [
-          { message_id: "a", reason: "よい" },
-          { message_id: "phantom", reason: "存在しない" },
-        ],
-      },
-      allowed,
-    );
-    expect(parsed.map((r) => r.message_id)).toEqual(["a"]);
-  });
-
-  it("reason の無い提案は空文字に倒す（行ごと落とさない）", () => {
-    const parsed = parseSuggestions(
-      { recommendations: [{ message_id: "b" }] },
-      allowed,
-    );
-    expect(parsed[0].reason).toBe("");
-  });
-
-  it("配列でない応答は空配列に倒す", () => {
-    expect(parseSuggestions({ recommendations: "none" }, allowed)).toEqual([]);
-    expect(parseSuggestions(null, allowed)).toEqual([]);
-  });
+// 候補の作り方を固定する。AI に渡す候補は多すぎると応答が遅くなるため、
+// 「タグのある曲を優先し、足りない分を新しい順」で上限まで集める。
+const row = (over: Partial<MusicRow> = {}): MusicRow => ({
+  message_id: "a",
+  url: "https://youtu.be/a",
+  timestamp: "2026-01-01T00:00:00Z",
+  title: "A",
+  ...over,
 });
 
-describe("プロンプトの構成", () => {
-  it("候補の message_id と title を渡す（URL は渡さない）", () => {
-    const prompt = buildSuggestPrompt(
-      "雨の日に聴きたい",
-      [
-        { message_id: "a", title: "雨のメロディ" },
-        { message_id: "b", title: "ハイメンテナンスガール" },
-      ],
-    );
-    expect(prompt).toContain("雨の日に聴きたい");
-    expect(prompt).toContain("雨のメロディ");
-    expect(prompt).not.toContain("https://");
-  });
+const tags = (message_id: string): AiTagRow => ({
+  message_id,
+  artist: "アーティスト",
+  genres: ["J-POP"],
+  moods: ["切ない"],
+  model: "m",
+  created_at: "t",
+  input_fingerprint: "f",
 });
 
-// structured outputs で使う JSON Schema が無事であることを固定する
-describe("スキーマの妥当性", () => {
-  it("recommendations は message_id と reason を要求する", () => {
-    const props = (SUGGEST_SCHEMA as { properties: { recommendations: { items: { properties: Record<string, unknown> } } } }).properties.recommendations.items.properties;
-    expect(Object.keys(props)).toContain("message_id");
-    expect(Object.keys(props)).toContain("reason");
+describe("候補の一括組み立て", () => {
+  it("タグのある曲を優先し、足りない分を新しい順で埋める", () => {
+    // rows は SQL（timestamp DESC）から来る前提なので、新しい順に並べて渡す
+    const rows = [
+      row({ message_id: "new", timestamp: "2026-06-01T00:00:00Z" }),
+      row({ message_id: "old", timestamp: "2025-01-01T00:00:00Z" }),
+      row({ message_id: "tagged" }),
+    ];
+    const map = new Map([["tagged", tags("tagged")]]);
+
+    const candidates = buildSuggestCandidates(rows, map, 2);
+    expect(candidates.map((c) => c.message_id)).toEqual(["tagged", "new"]);
+  });
+
+  it("上限に達したら残りは捨てる", () => {
+    const rows = [row({ message_id: "a" }), row({ message_id: "b" }), row({ message_id: "c" })];
+    const candidates = buildSuggestCandidates(rows, new Map(), 2);
+    expect(candidates).toHaveLength(2);
+  });
+
+  it("title の無い行は対象外", () => {
+    const rows = [row({ message_id: "a", title: undefined })];
+    expect(buildSuggestCandidates(rows, new Map(), 10)).toHaveLength(0);
+  });
+
+  it("タグ付きが上限を超えるときはタグ付きだけで埋める", () => {
+    const rows = [row({ message_id: "a" }), row({ message_id: "b" })];
+    const map = new Map([
+      ["a", tags("a")],
+      ["b", tags("b")],
+    ]);
+    const candidates = buildSuggestCandidates(rows, map, 1);
+    expect(candidates).toHaveLength(1);
+    expect(candidates[0].genres).toEqual(["J-POP"]);
   });
 });

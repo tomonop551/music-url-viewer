@@ -12,6 +12,9 @@ interface EnrichOptions {
   apiKey: string;
   model: string;
   prompt: string;
+  // 応答の待ち時間の上限（ms）。フリーモデルは応答が遅く、Workers の応答時間上限に
+  // 触れるため、明示的に打ち切って 502 を返す（ブラウザを待たせない）。
+  timeoutMs?: number;
 }
 
 type EnrichResult = { ok: true; tags: AiTags } | { ok: false; error: string; status?: number };
@@ -41,6 +44,7 @@ export async function enrichWithOpenRouter(
           json_schema: { name: schemaName, strict: true, schema },
         },
       }),
+      signal: AbortSignal.timeout(opts.timeoutMs ?? 30_000),
     });
   } catch {
     return { ok: false, error: "OpenRouter への接続に失敗しました" };
