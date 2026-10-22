@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MusicCard } from "./MusicCard";
-import { toSpotifyTrackUri, toVideoId, unusableReason } from "@/lib/playlist-url";
-import { countInPage, deselectMany, selectMany, toggleSelection } from "@/lib/selection";
+import { toSpotifyTrackUri, toVideoId, unusableReason } from "@/lib/catalog/playlist-url";
+import { countInPage, deselectMany, selectMany, toggleSelection } from "@/lib/playlist/selection";
 import { SpotifyExport } from "./SpotifyExport";
 import { AiSuggest } from "./AiSuggest";
 import {
@@ -15,8 +15,8 @@ import {
   STORAGE_KEY,
   storeSelectedRecords,
   storeSelection,
-} from "@/lib/selection-store";
-import { toCsv } from "@/lib/csv";
+} from "@/lib/playlist/selection-store";
+import { toCsv } from "@/lib/playlist/csv";
 import type { MusicUrlRecord } from "@/types/music";
 
 interface PlaylistSelectorProps {

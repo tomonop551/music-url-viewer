@@ -1,7 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 import { PlaylistSelector } from "@/components/PlaylistSelector";
-import { getD1Binding, getMusicPage, MUSIC_PAGE_SIZE } from "@/lib/d1";
+import { getD1Binding, getMusicPage, MUSIC_PAGE_SIZE } from "@/lib/catalog/d1";
 import type { MusicUrlRecord } from "@/types/music";
 
 export const dynamic = "force-dynamic";

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { buildSuggestCandidates } from "./ai-suggest";
-import type { AiTagRow } from "./d1";
-import type { MusicRow } from "./catalog";
+import { buildSuggestCandidates } from "./suggest";
+import type { AiTagRow } from "../catalog/d1";
+import type { MusicRow } from "../catalog/catalog";
 
 // 候補の作り方を固定する。AI に渡す候補は多すぎると応答が遅くなるため、
 // 「タグのある曲を優先し、足りない分を新しい順」で上限まで集める。

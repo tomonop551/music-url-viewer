@@ -1,6 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-import { getD1Binding, getMusicPage, MUSIC_PAGE_SIZE } from "@/lib/d1";
+import { getD1Binding, getMusicPage, MUSIC_PAGE_SIZE } from "@/lib/catalog/d1";
 import { MusicList } from "@/components/MusicList";
 import type { MusicUrlRecord } from "@/types/music";
 

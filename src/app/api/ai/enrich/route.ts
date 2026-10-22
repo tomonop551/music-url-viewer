@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { getD1Binding, getMusicRows, upsertAiTags, incrementAiBudget } from "@/lib/d1";
-import type { MusicRow } from "@/lib/catalog";
-import { buildEnrichPrompt, pickEnrichTargets, aiTagsSchema } from "@/lib/ai-enrich";
-import { callOpenRouter } from "@/lib/openrouter";
-import { checkDailyLimit } from "@/lib/ai-budget";
+import { getD1Binding, getMusicRows, upsertAiTags, incrementAiBudget } from "@/lib/catalog/d1";
+import type { MusicRow } from "@/lib/catalog/catalog";
+import { buildEnrichPrompt, pickEnrichTargets, aiTagsSchema } from "@/lib/ai/enrich";
+import { callOpenRouter } from "@/lib/ai/openrouter";
+import { checkDailyLimit } from "@/lib/ai/budget";
 import { createHash } from "node:crypto";
 
 export const runtime = "nodejs";

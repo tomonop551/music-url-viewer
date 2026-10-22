@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSession, signIn } from "next-auth/react";
-import type { SelectableRecord } from "@/lib/selection-store";
+import type { SelectableRecord } from "@/lib/playlist/selection-store";
 
 interface SpotifyExportProps {
   tracks: SelectableRecord[];
