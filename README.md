@@ -49,13 +49,21 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Project Structure
 
-- `src/app/page.tsx`: Main page with ISR configuration.
-- `src/app/playlists/page.tsx`: Playlist selection page.
-- `src/lib/d1.ts`: D1 data access layer.
-- `src/lib/catalog.ts`: Catalog boundary (URL canonicalization, row validation).
-- `src/lib/playlist-url.ts`: URL → video ID / Spotify track URI の判定と除外理由。
-- `src/lib/selection.ts` / `src/lib/selection-store.ts`: 選択状態の判定と localStorage への退避。
-- `src/lib/csv.ts`: 書き出し用の CSV 変換。
+```
+src/
+├── app/                 # 画面と API routes（/ と /playlists、/api/*）
+├── components/          # UI コンポーネント（Storybook あり）
+├── types/               # 型定義
+└── lib/
+    ├── ai/              # AI まわり（予算判定・濃縮・OpenRouter クライアント・提案）
+    ├── catalog/         # 曲データ（行検証・D1 読み書き・URL 判定）
+    ├── playlist/        # 選択と書き出し（選択状態・localStorage・CSV・Spotify 分割）
+    └── auth.ts          # OAuth（Auth.js / Spotify）
+```
+
+- `src/lib/catalog/`: D1 の行検証、D1 読み書き、URL → 動画 ID / Spotify track URI の判定。
+  `ai/` と `playlist/` の双方から参照する土台。
+- テストは各ファイルの隣に置く（`src/**/*.test.ts`）。
 
 ## Deployment
 
