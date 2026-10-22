@@ -1,4 +1,4 @@
-import { toSpotifyTrackUri } from "./playlist-url";
+import { toSpotifyTrackUri } from "../catalog/playlist-url";
 import type { SelectableRecord } from "./selection-store";
 
 export interface SpotifyTrack extends SelectableRecord {}

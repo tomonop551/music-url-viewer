@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
-import { pickSpotifyTracks, buildCreatePlaylistRequests, type SpotifyTrack } from "@/lib/spotify";
-import type { SelectableRecord } from "@/lib/selection-store";
+import { pickSpotifyTracks, buildCreatePlaylistRequests, type SpotifyTrack } from "@/lib/playlist/spotify";
+import type { SelectableRecord } from "@/lib/playlist/selection-store";
 
 export const runtime = "nodejs";
 

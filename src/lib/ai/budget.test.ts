@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkDailyLimit } from "./ai-budget";
+import { checkDailyLimit } from "./budget";
 
 // AI 呼び出しは無料枠を圧迫しないよう、1 日の実行回数を固定する。
 // 日付の繰り上がりで数え直すこと、閾値ちょうどで拒否されることを固定する。

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { getD1Binding, getMusicRows, getAiTagsMap } from "@/lib/d1";
-import { buildSuggestCandidates, buildSuggestPrompt, parseSuggestions, SUGGEST_SCHEMA } from "@/lib/ai-suggest";
-import { suggestionsSchema } from "@/lib/ai-enrich";
-import { callOpenRouter } from "@/lib/openrouter";
+import { getD1Binding, getMusicRows, getAiTagsMap } from "@/lib/catalog/d1";
+import { buildSuggestCandidates, buildSuggestPrompt, parseSuggestions, SUGGEST_SCHEMA } from "@/lib/ai/suggest";
+import { suggestionsSchema } from "@/lib/ai/enrich";
+import { callOpenRouter } from "@/lib/ai/openrouter";
 
 export const runtime = "nodejs";
 

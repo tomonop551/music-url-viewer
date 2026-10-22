@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseAiTags, buildEnrichPrompt, pickEnrichTargets } from "./ai-enrich";
+import { parseAiTags, buildEnrichPrompt, pickEnrichTargets } from "./enrich";
 
 // AI の出力は境界値。schema 通りの形しか保存しない（壊れた行で DB を汚さないため）。
 describe("AI 出力の検証", () => {
