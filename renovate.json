@@ -3,7 +3,6 @@
   "extends": [
     "config:recommended",
     ":timezone(Asia/Tokyo)",
-    "schedule:weekly",
     "helpers:pinGitHubActionDigests"
   ],
   "dependencyDashboard": true,
@@ -36,5 +35,8 @@
         "@types/{/,}**"
       ]
     }
+  ],
+  "schedule": [
+    "before 6am on every weekday"
   ]
 }
