@@ -5,7 +5,6 @@ import Link from "next/link";
 import { MusicCard } from "./MusicCard";
 import { toSpotifyTrackUri, toVideoId, unusableReason } from "@/lib/catalog/playlist-url";
 import { countInPage, deselectMany, selectMany, toggleSelection } from "@/lib/playlist/selection";
-import { SpotifyExport } from "./SpotifyExport";
 import { AiSuggest } from "./AiSuggest";
 import {
   clearStoredSelection,
@@ -143,9 +142,6 @@ export function PlaylistSelector({
             <p className="mt-1 text-sm text-gray-600">
               {countLabel} · 選択 {selected.size} 件
             </p>
-            <div className="mt-2">
-              <SpotifyExport tracks={items} selectedCount={selected.size} />
-            </div>
           </div>
 
           {/* 素の GET フォームなので JS 無しでも送信できる（送信するとページ番号は 1 に戻る） */}
