@@ -58,7 +58,6 @@ src/
     ├── ai/              # AI まわり（予算判定・濃縮・OpenRouter クライアント・提案）
     ├── catalog/         # 曲データ（行検証・D1 読み書き・URL 判定）
     ├── playlist/        # 選択と書き出し（選択状態・localStorage・CSV・Spotify 分割）
-    └── auth.ts          # OAuth（Auth.js / Spotify）
 ```
 
 - `src/lib/catalog/`: D1 の行検証、D1 読み書き、URL → 動画 ID / Spotify track URI の判定。
