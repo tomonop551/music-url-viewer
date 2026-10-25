@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { canonicalUrl, parseMusicRows } from "./catalog";
-import { FIXTURE_DATA_SOURCE, fixtureMusicPage, fixtureMusicRows, isFixtureSource } from "./fixture";
+import {
+  FIXTURE_DATA_SOURCE,
+  fixtureMusicPage,
+  fixtureMusicRows,
+  isFixtureSource,
+} from "./fixture";
 
 describe("フィクスチャデータ源", () => {
   it("既定では使わない（opt-in）", () => {

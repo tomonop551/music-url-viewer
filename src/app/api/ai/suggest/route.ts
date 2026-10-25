@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getD1Binding, getMusicRows, getAiTagsMap } from "@/lib/catalog/d1";
-import { buildSuggestCandidates, buildSuggestPrompt, parseSuggestions, SUGGEST_SCHEMA } from "@/lib/ai/suggest";
+import {
+  buildSuggestCandidates,
+  buildSuggestPrompt,
+  parseSuggestions,
+  SUGGEST_SCHEMA,
+} from "@/lib/ai/suggest";
 import { suggestionsSchema } from "@/lib/ai/enrich";
 import { callOpenRouter } from "@/lib/ai/openrouter";
 
@@ -45,14 +50,22 @@ export async function POST(request: Request) {
   // SQLite の変数上限を超え、D1_ERROR: too many SQL variables になるため）。
   const rows = await getMusicRows(db);
   const preCandidates = buildSuggestCandidates(rows, new Map(), SUGGEST_CANDIDATE_LIMIT);
-  const tagsMap = await getAiTagsMap(db, preCandidates.map((c) => c.message_id));
+  const tagsMap = await getAiTagsMap(
+    db,
+    preCandidates.map((c) => c.message_id),
+  );
   const candidates = buildSuggestCandidates(preCandidates, tagsMap, SUGGEST_CANDIDATE_LIMIT);
   if (candidates.length === 0) {
     return NextResponse.json({ error: "候補となる曲がありません" }, { status: 400 });
   }
 
   const prompt = buildSuggestPrompt(parsed.data.theme, candidates);
-  const res = await callOpenRouter({ apiKey, model, prompt }, "playlist_suggest", SUGGEST_SCHEMA, suggestionsSchema);
+  const res = await callOpenRouter(
+    { apiKey, model, prompt },
+    "playlist_suggest",
+    SUGGEST_SCHEMA,
+    suggestionsSchema,
+  );
   if (!res.ok) {
     return NextResponse.json({ error: res.error }, { status: 502 });
   }

@@ -85,7 +85,10 @@ export function AiSuggest({ onPick, urlById, titleById }: AiSuggestProps) {
             <li className="text-xs text-gray-600">提案できる曲が見つかりませんでした。</li>
           )}
           {suggestions.map((s) => (
-            <li key={s.message_id} className="flex items-center justify-between gap-2 rounded-lg bg-gray-50 px-3 py-2">
+            <li
+              key={s.message_id}
+              className="flex items-center justify-between gap-2 rounded-lg bg-gray-50 px-3 py-2"
+            >
               <div className="min-w-0">
                 <a
                   href={urlById[s.message_id]}

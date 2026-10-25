@@ -10,7 +10,10 @@ describe("動画 ID の切り出し", () => {
       ["https://music.youtube.com/watch?v=bOxfM1SqX14&si=VcR3TwQkQhRbNQZa", "bOxfM1SqX14"],
       ["https://www.youtube.com/watch?v=6RTLznn_I7k", "6RTLznn_I7k"],
       // ラジオ混在（list= と rv= が付く）。動画 ID は v= にある
-      ["https://www.youtube.com/watch?v=-M5i-JYvgyQ&list=RD-M5i-JYvgyQ&start_radio=1&rv=k2OY3xxUO0w", "-M5i-JYvgyQ"],
+      [
+        "https://www.youtube.com/watch?v=-M5i-JYvgyQ&list=RD-M5i-JYvgyQ&start_radio=1&rv=k2OY3xxUO0w",
+        "-M5i-JYvgyQ",
+      ],
       ["https://youtu.be/oCb89c0MDVk?si=iwEOcO-ByqBrQUGG", "oCb89c0MDVk"],
       ["https://youtu.be/JwOuZ0XQOSM", "JwOuZ0XQOSM"],
       // パスに ID がある形。当初の案では取り落としていた
@@ -60,7 +63,9 @@ describe("Spotify のトラック URI", () => {
 
   it("track の URL を uri に変換する", () => {
     expect(toSpotifyTrackUri(`https://open.spotify.com/track/${id}`)).toBe(`spotify:track:${id}`);
-    expect(toSpotifyTrackUri(`https://open.spotify.com/track/${id}?si=abc`)).toBe(`spotify:track:${id}`);
+    expect(toSpotifyTrackUri(`https://open.spotify.com/track/${id}?si=abc`)).toBe(
+      `spotify:track:${id}`,
+    );
   });
 
   it("track 以外と他ホストは null", () => {
@@ -79,12 +84,18 @@ describe("Spotify のトラック URI", () => {
 describe("除外理由", () => {
   it("選べるときは null を返す", () => {
     expect(unusableReason("https://youtu.be/oCb89c0MDVk", "youtube")).toBeNull();
-    expect(unusableReason("https://open.spotify.com/track/0123456789abcdefghijkl", "spotify")).toBeNull();
+    expect(
+      unusableReason("https://open.spotify.com/track/0123456789abcdefghijkl", "spotify"),
+    ).toBeNull();
   });
 
   it("選べないときは理由を返す", () => {
     const cases: [unknown, "youtube" | "spotify", string][] = [
-      ["https://music.youtube.com/playlist?list=OLAK5uy_nIZetgKJuMQ7rConC54DIpHgB1G1u7v-Y", "youtube", "動画 ID"],
+      [
+        "https://music.youtube.com/playlist?list=OLAK5uy_nIZetgKJuMQ7rConC54DIpHgB1G1u7v-Y",
+        "youtube",
+        "動画 ID",
+      ],
       ["https://youtube.com/@norinori_core", "youtube", "動画 ID"],
       ["https://music.apple.com/jp/album/demo/1", "youtube", "YouTube"],
       ["https://open.spotify.com/album/0123456789abcdefghijkl", "spotify", "トラック"],

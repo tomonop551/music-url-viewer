@@ -18,10 +18,16 @@ describe("選択状態の退避", () => {
 
   it("管制外の環境（localStorage 未定義）でも壊れない", () => {
     // 返り値は空集合、書き込みも例外を出さない
-    expect(loadStoredSelection(() => { throw new Error("異常系"); })).toEqual(new Set());
-    expect(() => storeSelection(new Set(["a"]), () => {
-      throw new Error("storage に触れてはいけない");
-    })).not.toThrow();
+    expect(
+      loadStoredSelection(() => {
+        throw new Error("異常系");
+      }),
+    ).toEqual(new Set());
+    expect(() =>
+      storeSelection(new Set(["a"]), () => {
+        throw new Error("storage に触れてはいけない");
+      }),
+    ).not.toThrow();
   });
 
   it("書き込んだ配列を読み戻すと同じ集合になる", () => {
@@ -37,7 +43,10 @@ describe("選択状態の退避", () => {
     // 壊れた要素ごと全捨てにすると、1 要素の型崩れで選択が全消しになる。部分拾いの方が実害が小さい。
     expect(loadStoredSelection(() => '["a",42,null]')).toEqual(new Set(["a"]));
     for (const raw of ["", "not json", '{"a":1}', "null"]) {
-      expect(loadStoredSelection(() => raw), raw).toEqual(new Set());
+      expect(
+        loadStoredSelection(() => raw),
+        raw,
+      ).toEqual(new Set());
     }
   });
 
@@ -61,7 +70,12 @@ describe("選択レコードの退避", () => {
     const backing = new Map<string, string>();
     storeSelectedRecords([record()], (key, value) => backing.set(key, value));
     expect(JSON.parse(backing.get(RECORDS_KEY)!)).toEqual({
-      a: { message_id: "a", url: "https://youtu.be/a", timestamp: "2026-01-01T00:00:00Z", title: "A" },
+      a: {
+        message_id: "a",
+        url: "https://youtu.be/a",
+        timestamp: "2026-01-01T00:00:00Z",
+        title: "A",
+      },
     });
   });
 
@@ -84,7 +98,10 @@ describe("選択レコードの退避", () => {
 
   it("壊れた保存値は空オブジェクトに倒す", () => {
     for (const raw of ["", "not json", '{"a":42}', "[]", "null"]) {
-      expect(loadSelectedRecordsMap(() => raw), raw).toEqual({});
+      expect(
+        loadSelectedRecordsMap(() => raw),
+        raw,
+      ).toEqual({});
     }
   });
 
@@ -99,6 +116,10 @@ describe("選択レコードの退避", () => {
   });
 
   it("読み取りの例外は空オブジェクト", () => {
-    expect(loadSelectedRecordsMap(() => { throw new Error("異常系"); })).toEqual({});
+    expect(
+      loadSelectedRecordsMap(() => {
+        throw new Error("異常系");
+      }),
+    ).toEqual({});
   });
 });

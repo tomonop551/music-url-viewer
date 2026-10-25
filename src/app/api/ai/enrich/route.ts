@@ -24,7 +24,11 @@ const responseSchema = {
     artist: { type: "string", description: "アーティスト名（推定で良い）" },
     genres: { type: "array", items: { type: "string" }, description: "ジャンル（最大 5 件）" },
     moods: { type: "array", items: { type: "string" }, description: "雰囲気（最大 5 件）" },
-    languages: { type: "array", items: { type: "string" }, description: "歌詞の言語（ja / en など）" },
+    languages: {
+      type: "array",
+      items: { type: "string" },
+      description: "歌詞の言語（ja / en など）",
+    },
     era: { type: "string", description: "年代（例: 2020s）" },
     ai_dopamine: { type: "number", description: "0〜10 の中毒性の推定" },
   },
@@ -75,9 +79,16 @@ export async function POST(request: Request) {
   const results = [];
   for (const row of targets) {
     const prompt = buildEnrichPrompt(row);
-    const fingerprint = createHash("sha256").update(`${row.url}\n${row.title ?? ""}`).digest("hex");
+    const fingerprint = createHash("sha256")
+      .update(`${row.url}\n${row.title ?? ""}`)
+      .digest("hex");
 
-    const res = await callOpenRouter({ apiKey, model, prompt }, "catalog_tags", responseSchema, aiTagsSchema);
+    const res = await callOpenRouter(
+      { apiKey, model, prompt },
+      "catalog_tags",
+      responseSchema,
+      aiTagsSchema,
+    );
     if (!res.ok) {
       results.push({ message_id: row.message_id, ok: false, error: res.error });
       continue;

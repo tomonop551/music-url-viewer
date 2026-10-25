@@ -71,7 +71,8 @@ export async function getMusicPage(
 
   // 件数を超えるページ番号は最終ページへ丸める（URL を直接叩かれても空のページに落とさない）
   const lastPage = Math.max(1, Math.ceil(total / pageSize));
-  const requested = options.page === undefined || !Number.isFinite(options.page) ? 1 : Math.trunc(options.page);
+  const requested =
+    options.page === undefined || !Number.isFinite(options.page) ? 1 : Math.trunc(options.page);
   const page = Math.min(Math.max(1, requested), lastPage);
 
   const { results } = await db
@@ -188,7 +189,10 @@ export async function getAiTags(db: D1Database, messageId: string): Promise<AiTa
 
 // タグの一括取得。候補の組み立てで曲ごとに D1 を叩かないため
 // （ Workers のサブリクエスト上限があり、曲数分のクエリは上限を超える）。
-export async function getAiTagsMap(db: D1Database, messageIds: string[]): Promise<Map<string, AiTagRow>> {
+export async function getAiTagsMap(
+  db: D1Database,
+  messageIds: string[],
+): Promise<Map<string, AiTagRow>> {
   if (messageIds.length === 0) return new Map();
   const placeholders = messageIds.map(() => "?").join(", ");
   const { results } = await db

@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  countInPage,
-  toggleSelection,
-  selectMany,
-  deselectMany,
-} from "./selection";
+import { countInPage, toggleSelection, selectMany, deselectMany } from "./selection";
 
 // 選択状態は Set<message_id>。コンポーネントはこの純関数に判定を寄せ、
 // ここで「全選択は対象ページ内の選択可能な ID だけが対象」「選択はページを跨がない」

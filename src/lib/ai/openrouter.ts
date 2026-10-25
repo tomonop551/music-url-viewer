@@ -49,9 +49,7 @@ export async function callOpenRouter<T>(
       },
       body: JSON.stringify({
         model: opts.model,
-        messages: [
-          { role: "user", content: opts.prompt },
-        ],
+        messages: [{ role: "user", content: opts.prompt }],
         response_format: {
           type: "json_schema",
           json_schema: { name: schemaName, strict: true, schema },
