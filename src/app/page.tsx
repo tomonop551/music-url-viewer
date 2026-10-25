@@ -1,7 +1,4 @@
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-
-import { getD1Binding, getMusicPage, MUSIC_PAGE_SIZE, type MusicPage } from "@/lib/catalog/d1";
-import { fixtureMusicPage, isFixtureSource } from "@/lib/catalog/fixture";
+import { loadMusicPage } from "@/lib/catalog/source";
 import { MusicList } from "@/components/MusicList";
 import type { MusicUrlRecord } from "@/types/music";
 
@@ -9,23 +6,6 @@ export const dynamic = "force-dynamic";
 
 // ISR（Incremental Static Regeneration）: 1 日 = 86400 秒
 export const revalidate = 86400;
-
-const EMPTY_PAGE: MusicPage = {
-  rows: [],
-  total: 0,
-  page: 1,
-  pageSize: MUSIC_PAGE_SIZE,
-  lastPage: 1,
-};
-
-// データ源の切り替えは opt-in。`MUSIC_DATA_SOURCE=fixture` のときだけ同梱フィクスチャを読み、
-// 既定はこれまでどおり D1 を読む（本番の見え方を変えない）。
-async function loadMusicPage(query: string, page: number): Promise<MusicPage> {
-  if (isFixtureSource(process.env.MUSIC_DATA_SOURCE)) return fixtureMusicPage({ query, page });
-
-  const db = getD1Binding(getCloudflareContext().env);
-  return db ? getMusicPage(db, { query, page }) : EMPTY_PAGE;
-}
 
 // 検索語とページ番号は URL（?q=&page=）に載せ、絞り込みは D1 側で行う。
 // 一覧は常に 1 ページ分だけを取るので、件数が増えても取得量は一定。
@@ -38,7 +18,7 @@ export default async function Home({
   const query = typeof params.q === "string" ? params.q : "";
   const requestedPage = Number.parseInt(typeof params.page === "string" ? params.page : "1", 10);
 
-  const musicPage = await loadMusicPage(query, requestedPage);
+  const musicPage = await loadMusicPage({ query, page: requestedPage });
 
   const musicUrls: MusicUrlRecord[] = musicPage.rows.map((r) => ({
     message_id: r.message_id,
