@@ -1,0 +1,16 @@
+# 生成物と依存。整形対象に含めると差分に意味が無くなる（Prettier は node_modules を既定で無視する）
+node_modules
+.next
+.open-next
+.wrangler
+storybook-static
+coverage
+playwright-report
+test-results
+
+# 生成される型定義
+worker-configuration.d.ts
+next-env.d.ts
+
+# 外部ツールが管理するファイル
+pnpm-lock.yaml
