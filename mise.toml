@@ -29,3 +29,7 @@ depends = ["test:unit", "test:storybook"]
 
 [tasks.ci]
 depends = ["lint", "type-check", "format:check", "test:unit", "build"]
+
+# push 前フック（lefthook.yml）の導入。ローカルごとに 1 回だけ実行する。
+[tasks."hooks:install"]
+run = "pnpm exec lefthook install"
