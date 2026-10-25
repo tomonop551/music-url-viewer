@@ -47,6 +47,10 @@ mise run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+`.env` に `MUSIC_DATA_SOURCE=fixture` を置くと、D1 を使わず同梱フィクスチャで一覧を表示する
+（Cloudflare の資格情報が無くても検索・ページ送り・`/playlists` まで触れる）。前提の用意、
+検証コマンド、push 前フック、PR の出し方は [docs/development.md](docs/development.md) を参照。
+
 ## Project Structure
 
 ```
