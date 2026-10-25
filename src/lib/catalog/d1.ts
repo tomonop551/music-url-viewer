@@ -1,6 +1,7 @@
 // D1 データアクセス層。binding 型は構造的ミニマム（@cloudflare/workers-types 非依存で単体検証可能）。
 import { z } from "zod";
 import { parseMusicRows, type MusicRow } from "./catalog";
+import { pickDailyIndex } from "./daily-pick";
 
 export interface D1PreparedStatement {
   bind(...params: unknown[]): D1PreparedStatement;
@@ -97,6 +98,27 @@ export async function getMusicRows(db: D1Database): Promise<MusicRow[]> {
     )
     .all<unknown>();
   return parseMusicRows(results);
+}
+
+// 「今日の一曲」を 1 件だけ引く。OFFSET の基準になる件数は**必ず全件**を数える
+// （一覧の total は検索中に絞り込み後の値へ変わるため、それを渡すと検索のたびに曲が変わる）。
+export async function getDailyPick(db: D1Database, dateKey: string): Promise<MusicRow | null> {
+  const totalRow = await db.prepare(`SELECT COUNT(*) AS total FROM music_catalog`).first<unknown>();
+  const total = totalSchema.safeParse(totalRow).data?.total ?? 0;
+  if (total === 0) return null;
+
+  // 並びは message_id 固定。日付が同じなら、曲の追加・削除がない限り同じ曲が出る。
+  const row = await db
+    .prepare(
+      `SELECT message_id, url, timestamp, title, dopamine
+         FROM music_catalog
+        ORDER BY message_id
+        LIMIT 1 OFFSET ?`,
+    )
+    .bind(pickDailyIndex(dateKey, total))
+    .first<unknown>();
+  if (row === null) return null;
+  return parseMusicRows([row])[0] ?? null;
 }
 
 // ---- AI タグ（music_ai_tags）----

@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
+import { pickDailyIndex } from "./daily-pick";
 import {
   getD1Binding,
+  getDailyPick,
   getMusicPage,
   MUSIC_PAGE_SIZE,
   type D1Database,
@@ -86,5 +88,67 @@ describe("一覧のページング", () => {
     const { db, queries } = fakeDb(0);
     await getMusicPage(db, { query: "100%_test\\" });
     expect(queries[0].params).toEqual(["%100\\%\\_test\\\\%", "%100\\%\\_test\\\\%"]);
+  });
+});
+
+// getDailyPick は「全件数」→「1 行」の順に first() を呼ぶ。呼び出し順で応答を返す偽 D1。
+function fakePickDb(total: number, row: unknown | null) {
+  const queries: { sql: string; params: unknown[] }[] = [];
+  let calls = 0;
+  const statement = (sql: string, params: unknown[]): D1PreparedStatement => ({
+    bind: (...next: unknown[]) => statement(sql, next),
+    first: async <T>() => {
+      queries.push({ sql, params });
+      calls += 1;
+      return (calls === 1 ? { total } : row) as T | null;
+    },
+    all: async <T>() => {
+      queries.push({ sql, params });
+      return { results: [] as T[] };
+    },
+    run: async () => ({ meta: { changes: 1 } }),
+  });
+  const db: D1Database = { prepare: (sql) => statement(sql, []), batch: async () => [] };
+  return { db, queries };
+}
+
+describe("今日の一曲の取得", () => {
+  it("全件数から決めた OFFSET で 1 件だけ引く", async () => {
+    const { db, queries } = fakePickDb(223, musicRow);
+    const pick = await getDailyPick(db, "2026-10-26");
+
+    expect(pick).toEqual({
+      message_id: "1",
+      url: "https://youtu.be/demo",
+      timestamp: "2026-01-01T00:00:00Z",
+    });
+    // 検索語で絞らない（絞り込み後の件数で選ぶと、検索のたびに曲が変わる）
+    expect(queries[0].sql).toContain("COUNT(*) AS total");
+    expect(queries[0].sql).not.toContain("WHERE");
+    expect(queries[1].sql).toContain("ORDER BY message_id");
+    expect(queries[1].params).toEqual([pickDailyIndex("2026-10-26", 223)]);
+  });
+
+  it("同じ日付なら同じ OFFSET、日付が変われば変わる", async () => {
+    const today = fakePickDb(223, musicRow);
+    const sameDay = fakePickDb(223, musicRow);
+    const tomorrow = fakePickDb(223, musicRow);
+    await getDailyPick(today.db, "2026-10-26");
+    await getDailyPick(sameDay.db, "2026-10-26");
+    await getDailyPick(tomorrow.db, "2026-10-27");
+
+    expect(sameDay.queries[1].params).toEqual(today.queries[1].params);
+    expect(tomorrow.queries[1].params).not.toEqual(today.queries[1].params);
+  });
+
+  it("0 件なら行を引かずに null", async () => {
+    const { db, queries } = fakePickDb(0, null);
+    expect(await getDailyPick(db, "2026-10-26")).toBeNull();
+    expect(queries).toHaveLength(1);
+  });
+
+  it("OFFSET の位置に行が無ければ null", async () => {
+    const { db } = fakePickDb(223, null);
+    expect(await getDailyPick(db, "2026-10-26")).toBeNull();
   });
 });
