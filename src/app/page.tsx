@@ -1,6 +1,4 @@
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-
-import { getD1Binding, getMusicPage, MUSIC_PAGE_SIZE } from "@/lib/catalog/d1";
+import { loadMusicPage } from "@/lib/catalog/source";
 import { MusicList } from "@/components/MusicList";
 import type { MusicUrlRecord } from "@/types/music";
 
@@ -20,10 +18,7 @@ export default async function Home({
   const query = typeof params.q === "string" ? params.q : "";
   const requestedPage = Number.parseInt(typeof params.page === "string" ? params.page : "1", 10);
 
-  const db = getD1Binding(getCloudflareContext().env);
-  const musicPage = db
-    ? await getMusicPage(db, { query, page: requestedPage })
-    : { rows: [], total: 0, page: 1, pageSize: MUSIC_PAGE_SIZE, lastPage: 1 };
+  const musicPage = await loadMusicPage({ query, page: requestedPage });
 
   const musicUrls: MusicUrlRecord[] = musicPage.rows.map((r) => ({
     message_id: r.message_id,
@@ -37,7 +32,10 @@ export default async function Home({
     <main className="min-h-screen bg-gray-50 px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <p className="mb-4 text-sm">
-          <a href="/playlists" className="text-blue-700 underline decoration-blue-200 underline-offset-4">
+          <a
+            href="/playlists"
+            className="text-blue-700 underline decoration-blue-200 underline-offset-4"
+          >
             プレイリストを作る →
           </a>
         </p>

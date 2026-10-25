@@ -9,15 +9,27 @@ const optionalStringArray = z
 
 const optionalDopamine = z
   .unknown()
-  .transform((v) => (typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 10 ? v : undefined))
+  .transform((v) =>
+    typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 10 ? v : undefined,
+  )
   .optional();
 
 export const aiTagsSchema = z.object({
-  artist: z.unknown().transform((v) => (typeof v === "string" && v.trim() !== "" ? v.trim().slice(0, 200) : undefined)).optional(),
+  artist: z
+    .unknown()
+    .transform((v) =>
+      typeof v === "string" && v.trim() !== "" ? v.trim().slice(0, 200) : undefined,
+    )
+    .optional(),
   genres: optionalStringArray,
   moods: optionalStringArray,
   languages: optionalStringArray,
-  era: z.unknown().transform((v) => (typeof v === "string" && v.trim() !== "" ? v.trim().slice(0, 40) : undefined)).optional(),
+  era: z
+    .unknown()
+    .transform((v) =>
+      typeof v === "string" && v.trim() !== "" ? v.trim().slice(0, 40) : undefined,
+    )
+    .optional(),
   ai_dopamine: optionalDopamine,
 });
 
@@ -54,7 +66,7 @@ export function buildEnrichPrompt(record: { title?: string }): string {
 export function pickEnrichTargets<Row extends { title?: string | null }>(
   rows: Row[],
 ): (Row & { title: string })[] {
-  return rows.filter((r): r is Row & { title: string } =>
-    typeof r.title === "string" && r.title.trim() !== ""
+  return rows.filter(
+    (r): r is Row & { title: string } => typeof r.title === "string" && r.title.trim() !== "",
   );
 }

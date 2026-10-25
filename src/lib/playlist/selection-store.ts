@@ -120,4 +120,3 @@ export function loadSelectedRecordsMap(
   }
   return out;
 }
-

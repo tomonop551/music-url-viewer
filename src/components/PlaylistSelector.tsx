@@ -70,7 +70,9 @@ export function PlaylistSelector({
   const selectedInPage = countInPage(selected, selectableIds);
 
   // 選択不可の内訳。reasonDist は「理由 → 件数」。実測では 2 種類に収まる。
-  const unusable = items.filter((item) => toVideoId(item.url) === null && toSpotifyTrackUri(item.url) === null);
+  const unusable = items.filter(
+    (item) => toVideoId(item.url) === null && toSpotifyTrackUri(item.url) === null,
+  );
   const reasonDist = new Map<string, number>();
   for (const item of unusable) {
     const reason = unusableReason(item.url, "youtube") ?? "選択できません";
@@ -145,7 +147,12 @@ export function PlaylistSelector({
           </div>
 
           {/* 素の GET フォームなので JS 無しでも送信できる（送信するとページ番号は 1 に戻る） */}
-          <form action="/playlists" method="get" role="search" className="flex w-full items-center gap-2 sm:w-auto">
+          <form
+            action="/playlists"
+            method="get"
+            role="search"
+            className="flex w-full items-center gap-2 sm:w-auto"
+          >
             <div className="relative flex-1 sm:w-64">
               <label htmlFor="playlist-search" className="sr-only">
                 タイトルまたはURLで検索
@@ -220,15 +227,17 @@ export function PlaylistSelector({
           {unusable.length > 0 && (
             <p className="mt-4 text-xs text-gray-600">
               選べない URL が {unusable.length} 件あります（
-              {[...reasonDist.entries()].map(([reason, n]) => `${reason} ${n} 件`).join("・")}
-              ）
+              {[...reasonDist.entries()].map(([reason, n]) => `${reason} ${n} 件`).join("・")}）
             </p>
           )}
         </>
       )}
 
       {lastPage > 1 && (
-        <nav aria-label="ページ送り" className="mt-8 flex items-center justify-center gap-4 text-sm">
+        <nav
+          aria-label="ページ送り"
+          className="mt-8 flex items-center justify-center gap-4 text-sm"
+        >
           {page > 1 ? (
             <Link href={pageHref(page - 1)} rel="prev" className={pageLinkClass}>
               前へ
@@ -271,7 +280,7 @@ interface PlaylistCardProps {
 // なっているため、上に重ねた UI は誤クリックで曲ページに飛ぶ。
 function PlaylistCard({ item, selected, onToggle }: PlaylistCardProps) {
   const selectable = toVideoId(item.url) !== null || toSpotifyTrackUri(item.url) !== null;
-  const reason = selectable ? null : unusableReason(item.url, "youtube") ?? "選択できません";
+  const reason = selectable ? null : (unusableReason(item.url, "youtube") ?? "選択できません");
   return (
     <div className="flex items-stretch gap-2">
       <label

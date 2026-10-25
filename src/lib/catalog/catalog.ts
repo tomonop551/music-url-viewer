@@ -6,7 +6,8 @@ import { z } from "zod";
 // 0–10 の有限数だけを嗜好性として通す。boolean・範囲外・NaN は「未評価」に倒す。
 // ここで null に寄せるのは、値が壊れた 1 行のせいで曲ごと一覧から消えるのを避けるため。
 export function score(value: unknown): number | null {
-  if (typeof value === "boolean" || typeof value !== "number" || !Number.isFinite(value)) return null;
+  if (typeof value === "boolean" || typeof value !== "number" || !Number.isFinite(value))
+    return null;
   return value >= 0 && value <= 10 ? value : null;
 }
 
@@ -50,18 +51,17 @@ export function canonicalUrl(value: unknown): string | null {
   } catch {
     return null;
   }
-  if (
-    u.protocol !== "https:" ||
-    !HOSTS.has(u.hostname) ||
-    u.username !== "" ||
-    u.password !== ""
-  ) {
+  if (u.protocol !== "https:" || !HOSTS.has(u.hostname) || u.username !== "" || u.password !== "") {
     return null;
   }
   if (u.hostname === "youtu.be") {
     return `https://www.youtube.com/watch?v=${encodeURIComponent(u.pathname.replace(/^\/+/, ""))}`;
   }
-  if (u.hostname === "youtube.com" || u.hostname === "www.youtube.com" || u.hostname === "music.youtube.com") {
+  if (
+    u.hostname === "youtube.com" ||
+    u.hostname === "www.youtube.com" ||
+    u.hostname === "music.youtube.com"
+  ) {
     const video = u.searchParams.get("v");
     if (video) return `https://www.youtube.com/watch?v=${encodeURIComponent(video)}`;
   }

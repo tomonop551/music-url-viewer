@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { getD1Binding, getMusicPage, MUSIC_PAGE_SIZE, type D1Database, type D1PreparedStatement } from "./d1";
+import {
+  getD1Binding,
+  getMusicPage,
+  MUSIC_PAGE_SIZE,
+  type D1Database,
+  type D1PreparedStatement,
+} from "./d1";
 
 describe("D1 バインディングの検証", () => {
   it("欠落・別物は undefined を返してログに残す", () => {
@@ -21,8 +27,14 @@ function fakeDb(total: number, rows: unknown[] = []) {
   const queries: { sql: string; params: unknown[] }[] = [];
   const statement = (sql: string, params: unknown[]): D1PreparedStatement => ({
     bind: (...next: unknown[]) => statement(sql, next),
-    first: async <T>() => { queries.push({ sql, params }); return { total } as T; },
-    all: async <T>() => { queries.push({ sql, params }); return { results: rows as T[] }; },
+    first: async <T>() => {
+      queries.push({ sql, params });
+      return { total } as T;
+    },
+    all: async <T>() => {
+      queries.push({ sql, params });
+      return { results: rows as T[] };
+    },
     run: async () => ({ meta: { changes: 1 } }),
   });
   const db: D1Database = { prepare: (sql) => statement(sql, []), batch: async () => [] };
@@ -40,7 +52,9 @@ describe("一覧のページング", () => {
     const { db, queries } = fakeDb(222, [musicRow]);
     const result = await getMusicPage(db, {});
     expect(result).toMatchObject({ total: 222, page: 1, pageSize: MUSIC_PAGE_SIZE, lastPage: 5 });
-    expect(result.rows).toEqual([{ message_id: "1", url: "https://youtu.be/demo", timestamp: "2026-01-01T00:00:00Z" }]);
+    expect(result.rows).toEqual([
+      { message_id: "1", url: "https://youtu.be/demo", timestamp: "2026-01-01T00:00:00Z" },
+    ]);
     const select = queries[1];
     expect(select.sql).not.toContain("WHERE");
     expect(select.params).toEqual([MUSIC_PAGE_SIZE, 0]);

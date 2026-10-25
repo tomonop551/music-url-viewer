@@ -22,7 +22,7 @@ describe("CSV への変換", () => {
 
   it("カンマを含む値はクオートする", () => {
     const csv = toCsv([{ t: "花譜, ライブ" }], ["t"]);
-    expect(csv).toBe("\uFEFFt\n\"花譜, ライブ\"");
+    expect(csv).toBe('\uFEFFt\n"花譜, ライブ"');
   });
 
   it("ダブルクオートは二重にして、値もクオートする", () => {
@@ -32,7 +32,7 @@ describe("CSV への変換", () => {
 
   it("改行を含む値はクオートする", () => {
     const csv = toCsv([{ t: "1行目\n2行目" }], ["t"]);
-    expect(csv).toBe("\uFEFFt\n\"1行目\n2行目\"");
+    expect(csv).toBe('\uFEFFt\n"1行目\n2行目"');
   });
 
   it("該当行が無くてもヘッダーだけは出す", () => {

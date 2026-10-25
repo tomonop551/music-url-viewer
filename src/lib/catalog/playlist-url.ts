@@ -53,7 +53,9 @@ export function toVideoId(value: unknown): string | null {
     candidate = parts[1];
   }
 
-  return candidate !== null && candidate !== undefined && VIDEO_ID.test(candidate) ? candidate : null;
+  return candidate !== null && candidate !== undefined && VIDEO_ID.test(candidate)
+    ? candidate
+    : null;
 }
 
 // Spotify のトラック URI を作る。track 以外（アルバム・プレイリスト）は対象外。

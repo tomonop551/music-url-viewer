@@ -47,7 +47,10 @@ export function MusicList({ items, query, page, pageSize, total, lastPage }: Mus
               {query && (
                 <>
                   {" · "}
-                  <Link href="/" className="text-blue-700 underline decoration-blue-200 underline-offset-4">
+                  <Link
+                    href="/"
+                    className="text-blue-700 underline decoration-blue-200 underline-offset-4"
+                  >
                     クリア
                   </Link>
                 </>
@@ -56,7 +59,12 @@ export function MusicList({ items, query, page, pageSize, total, lastPage }: Mus
           </div>
 
           {/* 素の GET フォームなので JS 無しでも送信できる（送信するとページ番号は 1 に戻る） */}
-          <form action="/" method="get" role="search" className="flex w-full items-center gap-2 sm:w-auto">
+          <form
+            action="/"
+            method="get"
+            role="search"
+            className="flex w-full items-center gap-2 sm:w-auto"
+          >
             <div className="relative flex-1 sm:w-64">
               <label htmlFor="music-search" className="sr-only">
                 タイトルまたはURLで検索
@@ -118,7 +126,10 @@ export function MusicList({ items, query, page, pageSize, total, lastPage }: Mus
       )}
 
       {lastPage > 1 && (
-        <nav aria-label="ページ送り" className="mt-8 flex items-center justify-center gap-4 text-sm">
+        <nav
+          aria-label="ページ送り"
+          className="mt-8 flex items-center justify-center gap-4 text-sm"
+        >
           {page > 1 ? (
             <Link href={pageHref(page - 1)} rel="prev" className={pageLinkClass}>
               前へ

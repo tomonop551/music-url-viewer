@@ -11,3 +11,25 @@ lint = "pnpm lint"
 type-check = "pnpm tsc --noEmit"
 install = "pnpm install"
 storybook = "pnpm storybook"
+
+# テスト。既定はブラウザを要さない unit だけ。Storybook のブラウザテストは OS 依存と
+# chromium が要るため `e2e:setup` を先に通す（CI への組み込みはワークフロー側の整備とセット）。
+"test:unit" = "pnpm test:unit"
+"test:storybook" = "pnpm test:storybook"
+"e2e:setup" = "pnpm exec playwright install --with-deps chromium"
+
+# 整形。基準は .prettierrc.json（lint は oxlint が担う）
+format = "pnpm format"
+"format:check" = "pnpm format:check"
+
+# 一括実行の入口。`test:storybook` は chromium と OS の共有ライブラリが要るため、
+# 初回だけ `mise run e2e:setup` を通しておく（手順は docs/development.md）。
+[tasks.test]
+depends = ["test:unit", "test:storybook"]
+
+[tasks.ci]
+depends = ["lint", "type-check", "format:check", "test:unit", "build"]
+
+# push 前フック（lefthook.yml）の導入。ローカルごとに 1 回だけ実行する。
+[tasks."hooks:install"]
+run = "pnpm exec lefthook install"

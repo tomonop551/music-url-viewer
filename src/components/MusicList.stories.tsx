@@ -1,15 +1,15 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { MusicList } from './MusicList';
+import type { Meta, StoryObj } from "@storybook/react";
+import { MusicList } from "./MusicList";
 
 const meta = {
-  title: 'Components/MusicList',
+  title: "Components/MusicList",
   component: MusicList,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   parameters: {
-    layout: 'padded',
+    layout: "padded",
   },
   args: {
-    query: '',
+    query: "",
     page: 1,
     pageSize: 50,
     total: 6,
@@ -23,41 +23,41 @@ type Story = StoryObj<typeof meta>;
 // 実データの傾向（和文タイトル・長いタイトル・プレイリストURL・タイトル未取得）を再現する
 const mockUrls = [
   {
-    message_id: '1',
-    url: 'https://music.youtube.com/playlist?list=OLAK5uy_nIZetgKJuMQ7rConC54DIpHgB1G1u7v-Y&si=VTNPmtBJ9kPsWvf3',
-    title: 'シュガーソルト',
-    timestamp: '2026-10-05T20:06:05.354391+00:00',
+    message_id: "1",
+    url: "https://music.youtube.com/playlist?list=OLAK5uy_nIZetgKJuMQ7rConC54DIpHgB1G1u7v-Y&si=VTNPmtBJ9kPsWvf3",
+    title: "シュガーソルト",
+    timestamp: "2026-10-05T20:06:05.354391+00:00",
   },
   {
-    message_id: '2',
-    url: 'https://youtu.be/tMKrECxEpq8?si=5yKlzPNcFDE3zrrf',
-    title: '花譜　#22　「過去を喰らう」 【オリジナルMV】',
-    timestamp: '2026-09-27T14:03:11.000000+00:00',
+    message_id: "2",
+    url: "https://youtu.be/tMKrECxEpq8?si=5yKlzPNcFDE3zrrf",
+    title: "花譜　#22　「過去を喰らう」 【オリジナルMV】",
+    timestamp: "2026-09-27T14:03:11.000000+00:00",
   },
   {
-    message_id: '3',
-    url: 'https://youtu.be/NfqAA_cLNoA?si=BQ09WKIfmtaB6Bv2',
-    title: 'Little Mermaid Medley リトル・マーメイド・メドレー（2行に折り返す長さの例）',
-    timestamp: '2026-09-22T03:29:44.000000+00:00',
+    message_id: "3",
+    url: "https://youtu.be/NfqAA_cLNoA?si=BQ09WKIfmtaB6Bv2",
+    title: "Little Mermaid Medley リトル・マーメイド・メドレー（2行に折り返す長さの例）",
+    timestamp: "2026-09-22T03:29:44.000000+00:00",
   },
   {
-    message_id: '4',
-    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    title: 'ハイメンテナンスガール',
-    timestamp: '2026-09-16T13:55:02.000000+00:00',
+    message_id: "4",
+    url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    title: "ハイメンテナンスガール",
+    timestamp: "2026-09-16T13:55:02.000000+00:00",
     dopamine: 8,
   },
   {
-    message_id: '5',
-    url: 'https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT',
-    title: 'Awesome Spotify Track',
-    timestamp: '2026-09-10T09:15:00.000000+00:00',
+    message_id: "5",
+    url: "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
+    title: "Awesome Spotify Track",
+    timestamp: "2026-09-10T09:15:00.000000+00:00",
     dopamine: 5,
   },
   {
-    message_id: '6',
-    url: 'https://music.apple.com/jp/album/1234567890',
-    timestamp: '2026-09-01T00:00:00.000000+00:00',
+    message_id: "6",
+    url: "https://music.apple.com/jp/album/1234567890",
+    timestamp: "2026-09-01T00:00:00.000000+00:00",
   },
 ];
 
@@ -81,7 +81,7 @@ export const Paginated: Story = {
 export const SearchResults: Story = {
   args: {
     items: mockUrls.slice(1, 3),
-    query: '花譜',
+    query: "花譜",
     total: 3,
     lastPage: 1,
   },
@@ -99,7 +99,7 @@ export const Empty: Story = {
 export const NoResults: Story = {
   args: {
     items: [],
-    query: '該当なし',
+    query: "該当なし",
     total: 0,
     lastPage: 1,
   },

@@ -1,0 +1,15 @@
+# コミット前チェック（issue #4）。ローカルの擦り傷をここで潰し、重い検証は CI に任せる。
+# 導入は `mise run hooks:install`（ローカルごとに 1 回）。`--no-verify` で回避できるため、
+# 最終的な担保は CI（.github/workflows/verify.yml）に置く。
+pre-commit:
+  parallel: true
+  jobs:
+    - name: lint
+      glob: "*.{js,jsx,mjs,cjs,ts,tsx}"
+      run: pnpm exec oxlint {staged_files}
+    - name: format
+      glob: "*.{js,jsx,mjs,cjs,ts,tsx,json,md,css,yml,yaml}"
+      run: pnpm exec prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
+    - name: type-check
+      run: pnpm exec tsc --noEmit

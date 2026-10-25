@@ -20,10 +20,7 @@ export interface CreatePlaylistRequest {
 
 // 1 つ目のリクエストで器を作り、2 つ目以降で曲を積む。
 // 曲の追加は 1 リクエスト URIS_PER_REQUEST 本までに分割する。
-export function buildCreatePlaylistRequests(
-  uris: string[],
-  name: string,
-): CreatePlaylistRequest[] {
+export function buildCreatePlaylistRequests(uris: string[], name: string): CreatePlaylistRequest[] {
   const requests: CreatePlaylistRequest[] = [{ name }];
   for (let i = 0; i < uris.length; i += URIS_PER_REQUEST) {
     requests.push({ uris: uris.slice(i, i + URIS_PER_REQUEST) });

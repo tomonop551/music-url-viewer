@@ -1,0 +1,35 @@
+[
+  {
+    "message_id": "fixture-0005",
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "timestamp": "2026-10-05T12:00:00.000Z",
+    "title": "フィクスチャ Alpha",
+    "dopamine": 8
+  },
+  {
+    "message_id": "fixture-0004",
+    "url": "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
+    "timestamp": "2026-10-04T12:00:00.000Z",
+    "title": "フィクスチャ Beta",
+    "dopamine": 6
+  },
+  {
+    "message_id": "fixture-0003",
+    "url": "https://youtu.be/9bZkp7q19f0",
+    "timestamp": "2026-10-03T12:00:00.000Z",
+    "title": "フィクスチャ Gamma"
+  },
+  {
+    "message_id": "fixture-0002",
+    "url": "https://music.youtube.com/playlist?list=PLfixture0000000000000000000000000000",
+    "timestamp": "2026-10-02T12:00:00.000Z",
+    "title": "フィクスチャ Delta（動画 ID を持たない URL）"
+  },
+  {
+    "message_id": "fixture-0001",
+    "url": "https://music.apple.com/jp/album/fixture/0000000000?i=0000000000",
+    "timestamp": "2026-10-01T12:00:00.000Z",
+    "title": "フィクスチャ Epsilon",
+    "dopamine": 0
+  }
+]

@@ -1,7 +1,5 @@
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-
 import { PlaylistSelector } from "@/components/PlaylistSelector";
-import { getD1Binding, getMusicPage, MUSIC_PAGE_SIZE } from "@/lib/catalog/d1";
+import { loadMusicPage } from "@/lib/catalog/source";
 import type { MusicUrlRecord } from "@/types/music";
 
 export const dynamic = "force-dynamic";
@@ -17,10 +15,7 @@ export default async function Playlists({
   const query = typeof params.q === "string" ? params.q : "";
   const requestedPage = Number.parseInt(typeof params.page === "string" ? params.page : "1", 10);
 
-  const db = getD1Binding(getCloudflareContext().env);
-  const musicPage = db
-    ? await getMusicPage(db, { query, page: requestedPage })
-    : { rows: [], total: 0, page: 1, pageSize: MUSIC_PAGE_SIZE, lastPage: 1 };
+  const musicPage = await loadMusicPage({ query, page: requestedPage });
 
   const musicUrls: MusicUrlRecord[] = musicPage.rows.map((r) => ({
     message_id: r.message_id,
