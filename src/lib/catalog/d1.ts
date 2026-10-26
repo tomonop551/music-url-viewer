@@ -123,7 +123,7 @@ export async function getDailyPick(db: D1Database, dateKey: string): Promise<Mus
 
 // ---- AI タグ（music_ai_tags）----
 // テーブル定義は公開リポジトリに載せないため、migration ファイルは持たない。
-// 列構成は aiTagRowSchema が唯一の情報源。
+// 列構成は AiTagRow が唯一の情報源。
 
 export interface AiTagRow {
   message_id: string;
@@ -183,8 +183,7 @@ export async function upsertAiTags(db: D1Database, row: AiTagRow): Promise<void>
 }
 
 // AI 呼び出しの当日回数を原子的に加算し、新しい count を返す（1 リクエスト = 1 回）。
-// テーブルは古いチャットの予算テーブルを転用せず、新しい用途として music_ai_budget を作る
-// （列の意味が変わる転用は、後から読む人が誤解するため）。
+// テーブルは他の用途から転用しない（列の意味が変わる転用は、後から読む人が誤解するため）。
 export async function incrementAiBudget(db: D1Database, day: string): Promise<number> {
   const row = await db
     .prepare(

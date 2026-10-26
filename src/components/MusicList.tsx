@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 
 import type { MusicUrlRecord } from "@/types/music";
 import { MusicCard } from "./MusicCard";
+import { PageNav } from "./PageNav";
+import { EmptyState } from "./EmptyState";
 
 interface MusicListProps {
   items: MusicUrlRecord[];
@@ -24,19 +26,6 @@ export function MusicList({ items, query, page, pageSize, total, lastPage, hero 
   // ヘッダーは総件数だけを持ち、範囲は一覧の見出しに置く（ヒーローの曲と混ざらないようにする）。
   const totalLabel = query ? `「${query}」に一致 ${total} 曲` : `登録 ${total} 曲`;
   const rangeLabel = total === 0 ? "0 件" : `${from}〜${to} 件目`;
-
-  // 検索語を保ったままページだけ差し替える（1 ページ目は page を省いて URL を短く保つ）
-  const pageHref = (target: number) => {
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (target > 1) params.set("page", String(target));
-    const suffix = params.toString();
-    return suffix ? `/?${suffix}` : "/";
-  };
-
-  const pageLinkClass =
-    "rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 transition hover:bg-gray-50";
-  const pageDisabledClass = "rounded-lg border border-gray-200 px-3 py-2 text-gray-400";
 
   return (
     <>
@@ -121,21 +110,7 @@ export function MusicList({ items, query, page, pageSize, total, lastPage, hero 
         </div>
 
         {items.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-16 text-center">
-            <p className="text-sm text-gray-600">
-              {query
-                ? "検索条件に一致する曲が見つかりませんでした。"
-                : "表示できるURLがありません。"}
-            </p>
-            {query && (
-              <Link
-                href="/"
-                className="mt-4 inline-block rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-50"
-              >
-                検索をクリア
-              </Link>
-            )}
-          </div>
+          <EmptyState base="/" query={query} />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {items.map((item) => (
@@ -145,30 +120,7 @@ export function MusicList({ items, query, page, pageSize, total, lastPage, hero 
         )}
       </section>
 
-      {lastPage > 1 && (
-        <nav
-          aria-label="ページ送り"
-          className="mt-8 flex items-center justify-center gap-4 text-sm"
-        >
-          {page > 1 ? (
-            <Link href={pageHref(page - 1)} rel="prev" className={pageLinkClass}>
-              前へ
-            </Link>
-          ) : (
-            <span className={pageDisabledClass}>前へ</span>
-          )}
-          <span className="tabular-nums text-gray-600">
-            {page} / {lastPage} ページ
-          </span>
-          {page < lastPage ? (
-            <Link href={pageHref(page + 1)} rel="next" className={pageLinkClass}>
-              次へ
-            </Link>
-          ) : (
-            <span className={pageDisabledClass}>次へ</span>
-          )}
-        </nav>
-      )}
+      <PageNav base="/" query={query} page={page} lastPage={lastPage} />
     </>
   );
 }

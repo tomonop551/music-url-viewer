@@ -1,7 +1,6 @@
 // カタログ境界。D1 から読んだ行の検証と、URL の表示用正規化を担う。
-// かつては LLM へ渡すカタログ生成（modelCatalog / featureRowSchema）もここにあったが、
-// チャット機能の削除（issue なし・2026-10）に合わせて除いてある。
 import { z } from "zod";
+import type { MusicUrlRecord } from "@/types/music";
 
 // 0–10 の有限数だけを嗜好性として通す。boolean・範囲外・NaN は「未評価」に倒す。
 // ここで null に寄せるのは、値が壊れた 1 行のせいで曲ごと一覧から消えるのを避けるため。
@@ -45,12 +44,8 @@ const HOSTS = new Set([
 // https + ホワイトリストホスト以外は拒否（SSRF 予防）。youtube 系は watch?v=<id> へ正規化。
 export function canonicalUrl(value: unknown): string | null {
   if (typeof value !== "string") return null;
-  let u: URL;
-  try {
-    u = new URL(value);
-  } catch {
-    return null;
-  }
+  const u = URL.parse(value);
+  if (u === null) return null;
   if (u.protocol !== "https:" || !HOSTS.has(u.hostname) || u.username !== "" || u.password !== "") {
     return null;
   }
@@ -70,18 +65,23 @@ export function canonicalUrl(value: unknown): string | null {
 
 // 形の合わない行はその行だけ落とす。1 行の破損で一覧全体を失わないため。
 // 落としたことはログに残す（黙って欠けると「データが消えた」と誤解される）。
-function parseRows<T>(schema: z.ZodType<T>, values: unknown[], label: string): T[] {
-  const rows: T[] = [];
-  let dropped = 0;
-  for (const value of values) {
-    const parsed = schema.safeParse(value);
-    if (parsed.success) rows.push(parsed.data);
-    else dropped += 1;
-  }
-  if (dropped > 0) console.warn(`[catalog] ${label} の ${dropped} 行を検証で除外しました`);
+export function parseMusicRows(values: unknown[]): MusicRow[] {
+  const rows = values.flatMap((value) => {
+    const parsed = musicRowSchema.safeParse(value);
+    return parsed.success ? [parsed.data] : [];
+  });
+  const dropped = values.length - rows.length;
+  if (dropped > 0) console.warn(`[catalog] music_catalog の ${dropped} 行を検証で除外しました`);
   return rows;
 }
 
-export function parseMusicRows(values: unknown[]): MusicRow[] {
-  return parseRows(musicRowSchema, values, "music_catalog");
+// MusicRow を表示用の MusicUrlRecord へ写す。title / dopamine は未取得のときだけ欠かせる。
+export function toRecord(row: MusicRow): MusicUrlRecord {
+  return {
+    message_id: row.message_id,
+    url: row.url,
+    timestamp: row.timestamp,
+    ...(row.title ? { title: row.title } : {}),
+    ...(row.dopamine !== undefined ? { dopamine: row.dopamine } : {}),
+  };
 }

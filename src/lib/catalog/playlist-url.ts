@@ -1,9 +1,8 @@
 // プレイリスト機能のための URL 分解。
 //
-// 一覧表示用の canonicalUrl()（catalog.ts:69-93）は流用できない。用途が逆で、
-// music.youtube.com/playlist?list=... を `list=` ごと捨てて origin + pathname に潰す
-// （catalog.ts:88-92）。プレイリストは「ID が取り出せるか」を見たいので、
-// 表示用の正規化とは別の判定をここに置く。
+// 一覧表示用の canonicalUrl()（catalog.ts）は流用できない。用途が逆で、
+// music.youtube.com/playlist?list=... を `list=` ごと捨てて origin + pathname に潰す。
+// プレイリストは「ID が取り出せるか」を見たいので、表示用の正規化とは別の判定をここに置く。
 
 const YOUTUBE_HOSTS = new Set(["youtube.com", "www.youtube.com", "music.youtube.com", "youtu.be"]);
 const SPOTIFY_HOST = "open.spotify.com";
@@ -20,12 +19,8 @@ export type PlaylistTarget = "youtube" | "spotify";
 // https 以外と、資格情報つきの URL は受け付けない（catalog.ts の canonicalUrl と同じ線引き）。
 function parseSafe(value: unknown): URL | null {
   if (typeof value !== "string") return null;
-  let url: URL;
-  try {
-    url = new URL(value);
-  } catch {
-    return null;
-  }
+  const url = URL.parse(value);
+  if (url === null) return null;
   if (url.protocol !== "https:") return null;
   if (url.username !== "" || url.password !== "") return null;
   return url;
@@ -78,12 +73,8 @@ export function unusableReason(value: unknown, target: PlaylistTarget): string |
 
   if (typeof value !== "string" || value === "") return "URL が記録されていません";
 
-  let url: URL;
-  try {
-    url = new URL(value);
-  } catch {
-    return "URL として解釈できません";
-  }
+  const url = URL.parse(value);
+  if (url === null) return "URL として解釈できません";
   if (url.protocol !== "https:") return "https の URL ではありません";
   if (url.username !== "" || url.password !== "") return "URL に認証情報が含まれています";
 

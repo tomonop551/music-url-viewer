@@ -1,8 +1,8 @@
-// 選択状態のlocalStorage への退避。
+// 選択状態の localStorage への退避。
 // ページ送りや検索のたびにクライアントコンポーネントは作り直されるため、
-// 刻み1の「ページ内完結」のままでは跨いだ選択が消える。そこでここに退避する。
+// 「ページ内完結」のままでは跨いだ選択が消える。そこでここに退避する。
 // 読み取りはマウント後（useEffect）に行う前提。SSR と localStorage の値は
-// 独立しているため、描画に使うと hydration の食い違いになる（Readme.md とは別）。
+// 独立しているため、描画に使うと hydration の食い違いになる。
 
 import type { MusicUrlRecord } from "@/types/music";
 
@@ -13,7 +13,7 @@ export const RECORDS_KEY = "music-url-viewer:selected-records";
 export type SelectableRecord = Pick<MusicUrlRecord, "message_id" | "url" | "timestamp" | "title">;
 
 // 生の取得/保存関数を受け取る。localStorage の有無は呼び出し側の環境次第なので、
-// ここはNode でも単体検証できるよう、/storage への直接参照をコンポーネント側に任せる。
+// ここは Node でも単体検証できるよう、storage への直接参照をコンポーネント側に任せる。
 export type RawReader = () => string | null;
 export type RawWriter = (value: string) => void;
 
@@ -41,7 +41,7 @@ export function loadStoredSelection(read: RawReader): Set<string> {
 }
 
 // 保存に失敗（private mode / quota 超過）しても選択の操作自体は生かす。
-// 退避できなかったことは無視できないが、画面の_OPERABILITY を落とす理由にはならない。
+// 退避できなかったことは無視できないが、画面の操作性を落とす理由にはならない。
 export function storeSelection(selected: Set<string>, write: RawWriter): void {
   try {
     write(JSON.stringify([...selected]));

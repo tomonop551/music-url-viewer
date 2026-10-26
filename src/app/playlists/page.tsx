@@ -1,6 +1,6 @@
 import { PlaylistSelector } from "@/components/PlaylistSelector";
 import { loadMusicPage } from "@/lib/catalog/source";
-import type { MusicUrlRecord } from "@/types/music";
+import { toRecord } from "@/lib/catalog/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -17,13 +17,7 @@ export default async function Playlists({
 
   const musicPage = await loadMusicPage({ query, page: requestedPage });
 
-  const musicUrls: MusicUrlRecord[] = musicPage.rows.map((r) => ({
-    message_id: r.message_id,
-    url: r.url,
-    timestamp: r.timestamp,
-    ...(r.title ? { title: r.title } : {}),
-    ...(r.dopamine !== undefined ? { dopamine: r.dopamine } : {}),
-  }));
+  const musicUrls = musicPage.rows.map(toRecord);
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-10 sm:px-6 lg:px-8">

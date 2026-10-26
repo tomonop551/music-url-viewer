@@ -1,7 +1,7 @@
 import { toSpotifyTrackUri } from "../catalog/playlist-url";
 import type { SelectableRecord } from "./selection-store";
 
-export interface SpotifyTrack extends SelectableRecord {}
+export type SpotifyTrack = SelectableRecord;
 
 // Spotify に載せられる曲だけを残す。URL → URI の判定は
 // playlist-url.ts の既存経路（unusableReason と同じ線引き）に寄せる。

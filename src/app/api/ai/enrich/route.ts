@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getD1Binding, getMusicRows, upsertAiTags, incrementAiBudget } from "@/lib/catalog/d1";
-import type { MusicRow } from "@/lib/catalog/catalog";
 import { buildEnrichPrompt, pickEnrichTargets, aiTagsSchema } from "@/lib/ai/enrich";
 import { callOpenRouter } from "@/lib/ai/openrouter";
 import { checkDailyLimit } from "@/lib/ai/budget";
@@ -12,6 +11,9 @@ export const runtime = "nodejs";
 
 // 1 日の AI 呼び出し上限（無料枠の消費を固定する）。1 リクエスト = 1 回と数える。
 const DAILY_LIMIT = 10;
+
+type EnrichResult =
+  { message_id: string; ok: true } | { message_id: string; ok: false; error: string };
 
 const bodySchema = z.object({
   // 1 回の実行で処理する件数の上限（opt-in の手動実行。勝手に全部を回さない）
@@ -72,11 +74,11 @@ export async function POST(request: Request) {
   const parsed = bodySchema.safeParse(body);
   const limit = parsed.success ? parsed.data.limit : 10;
 
-  // 濃縮の対象は title のある行だけ。未濃縮のものから順に処理する
-  const allRows: MusicRow[] = await getMusicRows(db);
-  const targets = pickEnrichTargets<MusicRow>(allRows).slice(0, limit);
+  // 濃縮の対象は title のある行だけ。新しい順に上限件数まで処理する
+  const allRows = await getMusicRows(db);
+  const targets = pickEnrichTargets(allRows).slice(0, limit);
 
-  const results = [];
+  const results: EnrichResult[] = [];
   for (const row of targets) {
     const prompt = buildEnrichPrompt(row);
     const fingerprint = createHash("sha256")

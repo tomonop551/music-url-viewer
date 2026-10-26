@@ -26,12 +26,9 @@ export function formatDateKey(dateKey: string): string {
 
 // プロトコルは一覧では判別の役に立たないため落とし、ホストとパスだけを見せる。
 export function compactUrl(url: string): string {
-  try {
-    const { host, pathname, search } = new URL(url);
-    return `${host}${pathname}${search}`;
-  } catch {
-    return url;
-  }
+  const u = URL.parse(url);
+  if (u === null) return url;
+  return `${u.host}${u.pathname}${u.search}`;
 }
 
 // 配信元の識別。一覧を目で追うときの手がかりになるため、色とアイコンで区別する。
