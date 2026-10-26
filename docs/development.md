@@ -59,8 +59,9 @@ chromium が必要なので、初回だけ次を実行する。
 mise run e2e:setup      # pnpm exec playwright install --with-deps chromium
 ```
 
-`test:storybook` は CI（`.github/workflows/verify.yml`）にはまだ組み込んでいない。CI から回すには
-chromium の導入ステップが必要（ワークフロー側の整備とセットで足す）。
+`test:storybook` は CI（`.github/workflows/verify.yml`）でも実行されている。CI は `mise run e2e:setup` で
+chromium と OS 依存を導入する。ローカルで `--with-deps`（sudo が必要）が通らない環境ではブラウザ
+テスト自体が実行できないため、その担保は CI 側で行う。
 
 ## 4. push 前フック（lefthook）
 

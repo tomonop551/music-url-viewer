@@ -38,11 +38,36 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # ローカルと同じ検証入口（mise タスク）で揃える。実行順は `mise run ci` と同じ。
       - name: Lint
         run: mise run lint
 
       - name: Type check
         run: mise run type-check
 
+      - name: Format check
+        run: mise run format:check
+
       - name: Unit tests
-        run: pnpm run test:unit
+        run: mise run test:unit
+
+      - name: Build
+        run: mise run build
+
+      # Storybook のブラウザテストは chromium と OS の共有ライブラリを要す。
+      # 導入コマンドは mise.toml の `e2e:setup` をそのまま呼び、ローカル手順との二重管理を避ける。
+      # ブラウザバイナリのみ pnpm-lock.yaml のハッシュでキャッシュする。OS 依存パッケージは
+      # ランナーは毎回新しいので e2e:setup を毎回通す（キャッシュヒット時はダウンロードだけが短縮される）。
+      - name: Cache Playwright browsers
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Chromium
+        run: mise run e2e:setup
+
+      - name: Storybook browser tests
+        run: mise run test:storybook
