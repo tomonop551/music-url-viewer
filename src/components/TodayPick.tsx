@@ -26,31 +26,31 @@ export function TodayPick({ item, dateKey }: TodayPickProps) {
   return (
     <section
       aria-label="今日の一曲"
-      className="mx-auto mb-10 max-w-2xl rounded-3xl border border-gray-200 bg-white px-6 py-8 text-center shadow-sm sm:px-10 sm:py-10"
+      className="mx-auto mb-10 max-w-2xl rounded-3xl border border-border bg-surface px-6 py-8 text-center shadow-sm sm:px-10 sm:py-10"
     >
-      <p className="text-[11px] font-semibold tracking-[0.2em] text-blue-700">
+      <p className="text-[11px] font-semibold tracking-[0.2em] text-accent">
         今日の一曲
-        <span className="ml-2 font-normal tracking-normal text-gray-500">
+        <span className="ml-2 font-normal tracking-normal text-fg-muted">
           <time dateTime={dateKey}>{formatDateKey(dateKey)}</time>
         </span>
       </p>
 
-      <h2 className="mt-4 text-2xl leading-snug font-bold tracking-tight text-gray-900 sm:text-3xl">
+      <h2 className="mt-4 text-2xl leading-snug font-bold tracking-tight text-fg sm:text-3xl">
         <a
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
           title={title}
-          className="rounded outline-none underline-offset-4 hover:text-blue-700 hover:underline focus-visible:ring-2 focus-visible:ring-blue-200"
+          className="rounded outline-none underline-offset-4 hover:text-accent hover:underline focus-visible:ring-2 focus-visible:ring-blue-200"
         >
           {title}
           <span className="sr-only">（新しいタブで開く）</span>
         </a>
       </h2>
 
-      {item.title && <p className="mt-2 truncate text-xs text-gray-500">{compactUrl(item.url)}</p>}
+      {item.title && <p className="mt-2 truncate text-xs text-fg-muted">{compactUrl(item.url)}</p>}
 
-      <div className="mt-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs text-gray-500">
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs text-fg-muted">
         <PlatformChip url={item.url} />
         {typeof item.dopamine === "number" && <DopamineChip value={item.dopamine} />}
         <span className="tabular-nums">登録日 {formatTimestamp(item.timestamp)}</span>

@@ -30,20 +30,20 @@ export function MusicList({ items, query, page, pageSize, total, lastPage, hero 
   return (
     <>
       {/* 件数が増えると検索欄が画面外へ流れるため、追従させて常に手の届く位置に置く */}
-      <header className="sticky top-0 z-10 mb-6 border-b border-gray-200/80 bg-gray-50/90 py-4 backdrop-blur-sm">
+      <header className="sticky top-0 z-10 mb-6 border-b border-border/80 bg-bg/90 py-4 backdrop-blur-sm">
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+            <h1 className="text-2xl font-bold tracking-tight text-fg sm:text-3xl">
               Music URL Viewer
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-fg-muted">
               {totalLabel}
               {query && (
                 <>
                   {" · "}
                   <Link
                     href="/"
-                    className="text-blue-700 underline decoration-blue-200 underline-offset-4"
+                    className="text-accent underline decoration-blue-200 underline-offset-4"
                   >
                     クリア
                   </Link>
@@ -65,7 +65,7 @@ export function MusicList({ items, query, page, pageSize, total, lastPage, hero 
               </label>
               <svg
                 aria-hidden="true"
-                className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400"
+                className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-fg-subtle"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -84,7 +84,7 @@ export function MusicList({ items, query, page, pageSize, total, lastPage, hero 
                 name="q"
                 defaultValue={query}
                 placeholder="タイトル・URLで検索"
-                className="w-full rounded-xl border border-gray-300 bg-white py-2.5 pr-3 pl-9 text-sm text-gray-900 shadow-sm transition outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                className="w-full rounded-xl border border-border-strong bg-surface py-2.5 pr-3 pl-9 text-sm text-fg shadow-sm transition outline-none placeholder:text-fg-subtle focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               />
             </div>
             <button
@@ -101,10 +101,10 @@ export function MusicList({ items, query, page, pageSize, total, lastPage, hero 
 
       <section aria-labelledby="music-list-heading">
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <h2 id="music-list-heading" className="text-base font-semibold text-gray-900">
+          <h2 id="music-list-heading" className="text-base font-semibold text-fg">
             曲の一覧
           </h2>
-          <p className="text-xs tabular-nums text-gray-600">
+          <p className="text-xs tabular-nums text-fg-muted">
             {totalLabel}中 {rangeLabel}
           </p>
         </div>
