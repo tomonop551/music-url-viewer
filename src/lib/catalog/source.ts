@@ -2,8 +2,9 @@
 // 画面ごとに分岐を書くと、片方だけフィクスチャに載る／載らないというズレが起きる。
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-import { getD1Binding, getMusicPage, MUSIC_PAGE_SIZE, type MusicPage } from "./d1";
-import { fixtureMusicPage, isFixtureSource } from "./fixture";
+import type { MusicRow } from "./catalog";
+import { getD1Binding, getDailyPick, getMusicPage, MUSIC_PAGE_SIZE, type MusicPage } from "./d1";
+import { fixtureDailyPick, fixtureMusicPage, isFixtureSource } from "./fixture";
 
 const EMPTY_PAGE: MusicPage = {
   rows: [],
@@ -26,4 +27,12 @@ export async function loadMusicPage({
 
   const db = getD1Binding(getCloudflareContext().env);
   return db ? getMusicPage(db, { query, page }) : EMPTY_PAGE;
+}
+
+// 「今日の一曲」。検索語は受け取らない（絞り込み後の件数で選ぶと、検索のたびに曲が変わる）。
+export async function loadDailyPick(dateKey: string): Promise<MusicRow | null> {
+  if (isFixtureSource(process.env.MUSIC_DATA_SOURCE)) return fixtureDailyPick(dateKey);
+
+  const db = getD1Binding(getCloudflareContext().env);
+  return db ? getDailyPick(db, dateKey) : null;
 }

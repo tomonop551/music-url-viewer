@@ -4,6 +4,7 @@
 // Cloudflare の資格情報も無い状態で一覧とプレイリスト画面を確認できるようにする。
 // 既定（未設定・その他の値）は現行どおり D1 を読むため、本番の見え方は変わらない。
 import { parseMusicRows, type MusicRow } from "./catalog";
+import { pickDailyIndex } from "./daily-pick";
 import { MUSIC_PAGE_SIZE, type MusicPage } from "./d1";
 
 import fixture from "./fixtures/music-catalog.json";
@@ -54,4 +55,14 @@ export function fixtureMusicPage(
     pageSize,
     lastPage,
   };
+}
+
+// D1 版 getDailyPick と同じ選び方をする。並びを message_id 昇順に揃えないと、
+// ローカル（フィクスチャ）と本番で別の曲が「今日の一曲」になる。
+export function fixtureDailyPick(dateKey: string): MusicRow | null {
+  const rows = [...fixtureMusicRows()].sort((a, b) => {
+    if (a.message_id === b.message_id) return 0;
+    return a.message_id < b.message_id ? -1 : 1;
+  });
+  return rows[pickDailyIndex(dateKey, rows.length)] ?? null;
 }

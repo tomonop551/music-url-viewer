@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { fixtureMusicPage } from "./fixture";
-import { loadMusicPage } from "./source";
+import { fixtureDailyPick, fixtureMusicPage } from "./fixture";
+import { loadDailyPick, loadMusicPage } from "./source";
 
 describe("データ源の切り替え", () => {
   const original = process.env.MUSIC_DATA_SOURCE;
@@ -25,5 +25,13 @@ describe("データ源の切り替え", () => {
     const page = await loadMusicPage({ query: "beta", page: 99 });
     expect(page).toEqual(fixtureMusicPage({ query: "beta", page: 99 }));
     expect(page.total).toBe(1);
+  });
+
+  it("今日の一曲もフィクスチャから選ぶ", async () => {
+    process.env.MUSIC_DATA_SOURCE = "fixture";
+
+    const pick = await loadDailyPick("2026-10-26");
+    expect(pick).toEqual(fixtureDailyPick("2026-10-26"));
+    expect(pick?.message_id).toBe("fixture-0005");
   });
 });

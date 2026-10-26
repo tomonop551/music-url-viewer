@@ -1,4 +1,6 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
+
 import type { MusicUrlRecord } from "@/types/music";
 import { MusicCard } from "./MusicCard";
 
@@ -9,16 +11,19 @@ interface MusicListProps {
   pageSize: number;
   total: number;
   lastPage: number;
+  // ヘッダーと一覧の間に差し込む要素（トップの「今日の一曲」）。追従するヘッダーを
+  // 先頭に保つ必要があるため、ページ側ではなくここで受け取る。
+  hero?: ReactNode;
 }
 
 // 検索とページ送りは URL（?q=&page=）で表す。絞り込みは D1 側で済ませてあるので、
 // ここは「与えられた 1 ページを描く」だけにしてある（ブラウザ側の状態を持たない）。
-export function MusicList({ items, query, page, pageSize, total, lastPage }: MusicListProps) {
+export function MusicList({ items, query, page, pageSize, total, lastPage, hero }: MusicListProps) {
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
-  const countLabel = query
-    ? `「${query}」に一致 ${total} 曲中 ${from}〜${to} 件目`
-    : `登録 ${total} 曲中 ${from}〜${to} 件目`;
+  // ヘッダーは総件数だけを持ち、範囲は一覧の見出しに置く（ヒーローの曲と混ざらないようにする）。
+  const totalLabel = query ? `「${query}」に一致 ${total} 曲` : `登録 ${total} 曲`;
+  const rangeLabel = total === 0 ? "0 件" : `${from}〜${to} 件目`;
 
   // 検索語を保ったままページだけ差し替える（1 ページ目は page を省いて URL を短く保つ）
   const pageHref = (target: number) => {
@@ -43,7 +48,7 @@ export function MusicList({ items, query, page, pageSize, total, lastPage }: Mus
               Music URL Viewer
             </h1>
             <p className="mt-1 text-sm text-gray-600">
-              {countLabel}
+              {totalLabel}
               {query && (
                 <>
                   {" · "}
@@ -103,27 +108,42 @@ export function MusicList({ items, query, page, pageSize, total, lastPage }: Mus
         </div>
       </header>
 
-      {items.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-16 text-center">
-          <p className="text-sm text-gray-600">
-            {query ? "検索条件に一致する曲が見つかりませんでした。" : "表示できるURLがありません。"}
+      {hero}
+
+      <section aria-labelledby="music-list-heading">
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h2 id="music-list-heading" className="text-base font-semibold text-gray-900">
+            曲の一覧
+          </h2>
+          <p className="text-xs tabular-nums text-gray-600">
+            {totalLabel}中 {rangeLabel}
           </p>
-          {query && (
-            <Link
-              href="/"
-              className="mt-4 inline-block rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-50"
-            >
-              検索をクリア
-            </Link>
-          )}
         </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {items.map((item) => (
-            <MusicCard key={item.message_id} item={item} />
-          ))}
-        </div>
-      )}
+
+        {items.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-16 text-center">
+            <p className="text-sm text-gray-600">
+              {query
+                ? "検索条件に一致する曲が見つかりませんでした。"
+                : "表示できるURLがありません。"}
+            </p>
+            {query && (
+              <Link
+                href="/"
+                className="mt-4 inline-block rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-50"
+              >
+                検索をクリア
+              </Link>
+            )}
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {items.map((item) => (
+              <MusicCard key={item.message_id} item={item} />
+            ))}
+          </div>
+        )}
+      </section>
 
       {lastPage > 1 && (
         <nav
