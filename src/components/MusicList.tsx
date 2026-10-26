@@ -5,6 +5,7 @@ import type { MusicUrlRecord } from "@/types/music";
 import { MusicCard } from "./MusicCard";
 import { PageNav } from "./PageNav";
 import { EmptyState } from "./EmptyState";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface MusicListProps {
   items: MusicUrlRecord[];
@@ -52,48 +53,51 @@ export function MusicList({ items, query, page, pageSize, total, lastPage, hero 
             </p>
           </div>
 
-          {/* 素の GET フォームなので JS 無しでも送信できる（送信するとページ番号は 1 に戻る） */}
-          <form
-            action="/"
-            method="get"
-            role="search"
-            className="flex w-full items-center gap-2 sm:w-auto"
-          >
-            <div className="relative flex-1 sm:w-64">
-              <label htmlFor="music-search" className="sr-only">
-                タイトルまたはURLで検索
-              </label>
-              <svg
-                aria-hidden="true"
-                className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-fg-subtle"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              <input
-                id="music-search"
-                type="search"
-                name="q"
-                defaultValue={query}
-                placeholder="タイトル・URLで検索"
-                className="w-full rounded-xl border border-border-strong bg-surface py-2.5 pr-3 pl-9 text-sm text-fg shadow-sm transition outline-none placeholder:text-fg-subtle focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-              />
-            </div>
-            <button
-              type="submit"
-              className="shrink-0 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+          {/* ヘッダー右端の固まり。検索フォーム（素の GET、JS 無しでも送信できる）とテーマ切替を並べる */}
+          <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+            <form
+              action="/"
+              method="get"
+              role="search"
+              className="flex w-full items-center gap-2 sm:w-auto"
             >
-              検索
-            </button>
-          </form>
+              <div className="relative flex-1 sm:w-64">
+                <label htmlFor="music-search" className="sr-only">
+                  タイトルまたはURLで検索
+                </label>
+                <svg
+                  aria-hidden="true"
+                  className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-fg-subtle"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                <input
+                  id="music-search"
+                  type="search"
+                  name="q"
+                  defaultValue={query}
+                  placeholder="タイトル・URLで検索"
+                  className="w-full rounded-xl border border-border-strong bg-surface py-2.5 pr-3 pl-9 text-sm text-fg shadow-sm transition outline-none placeholder:text-fg-subtle focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                />
+              </div>
+              <button
+                type="submit"
+                className="shrink-0 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                検索
+              </button>
+            </form>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 

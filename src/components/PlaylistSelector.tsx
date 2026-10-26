@@ -7,6 +7,7 @@ import { countInPage, deselectMany, selectMany, toggleSelection } from "@/lib/pl
 import { AiSuggest } from "./AiSuggest";
 import { PageNav } from "./PageNav";
 import { EmptyState } from "./EmptyState";
+import { ThemeToggle } from "./ThemeToggle";
 import {
   clearStoredSelection,
   loadSelectedRecordsMap,
@@ -134,33 +135,36 @@ export function PlaylistSelector({
             </p>
           </div>
 
-          {/* 素の GET フォームなので JS 無しでも送信できる（送信するとページ番号は 1 に戻る） */}
-          <form
-            action="/playlists"
-            method="get"
-            role="search"
-            className="flex w-full items-center gap-2 sm:w-auto"
-          >
-            <div className="relative flex-1 sm:w-64">
-              <label htmlFor="playlist-search" className="sr-only">
-                タイトルまたはURLで検索
-              </label>
-              <input
-                id="playlist-search"
-                type="search"
-                name="q"
-                defaultValue={query}
-                placeholder="タイトル・URLで検索"
-                className="w-full rounded-xl border border-border-strong bg-surface py-2.5 pr-3 pl-3 text-sm text-fg shadow-sm transition outline-none placeholder:text-fg-subtle focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-              />
-            </div>
-            <button
-              type="submit"
-              className="shrink-0 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+          {/* ヘッダー右端の固まり。検索フォーム（素の GET、JS 無しでも送信できる）とテーマ切替を並べる */}
+          <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+            <form
+              action="/playlists"
+              method="get"
+              role="search"
+              className="flex w-full items-center gap-2 sm:w-auto"
             >
-              検索
-            </button>
-          </form>
+              <div className="relative flex-1 sm:w-64">
+                <label htmlFor="playlist-search" className="sr-only">
+                  タイトルまたはURLで検索
+                </label>
+                <input
+                  id="playlist-search"
+                  type="search"
+                  name="q"
+                  defaultValue={query}
+                  placeholder="タイトル・URLで検索"
+                  className="w-full rounded-xl border border-border-strong bg-surface py-2.5 pr-3 pl-3 text-sm text-fg shadow-sm transition outline-none placeholder:text-fg-subtle focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                />
+              </div>
+              <button
+                type="submit"
+                className="shrink-0 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                検索
+              </button>
+            </form>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
@@ -256,7 +260,9 @@ function PlaylistCard({ item, selected, onToggle }: PlaylistCardProps) {
           <MusicCard item={item} />
         </div>
         {!selectable && reason && (
-          <p className="mt-1 break-words px-1 text-[11px] text-amber-800 dark:text-amber-300">{reason}</p>
+          <p className="mt-1 break-words px-1 text-[11px] text-amber-800 dark:text-amber-300">
+            {reason}
+          </p>
         )}
       </div>
     </div>
