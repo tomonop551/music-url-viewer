@@ -70,24 +70,24 @@ export function buildSuggestCandidates<Row extends MusicRowLike>(
   tagsMap: Map<string, SuggestCandidate>,
   limit: number,
 ): SuggestCandidate[] {
-  const tagged: SuggestCandidate[] = [];
-  const untagged: SuggestCandidate[] = [];
-  for (const row of rows) {
-    if (typeof row.title !== "string" || row.title.trim() === "") continue;
+  const candidates = rows.flatMap((row) => {
+    if (typeof row.title !== "string" || row.title.trim() === "") return [];
     const tags = tagsMap.get(row.message_id);
-    const candidate: SuggestCandidate = {
-      message_id: row.message_id,
-      title: row.title,
-      artist: tags?.artist,
-      genres: tags?.genres,
-      moods: tags?.moods,
-    };
-    (tags ? tagged : untagged).push(candidate);
-  }
+    return [
+      {
+        message_id: row.message_id,
+        title: row.title,
+        artist: tags?.artist,
+        genres: tags?.genres,
+        moods: tags?.moods,
+      },
+    ];
+  });
+  const tagged = candidates.filter((c) => tagsMap.has(c.message_id));
+  const untagged = candidates.filter((c) => !tagsMap.has(c.message_id));
 
   // 新しい順（rows は timestamp DESC で来る前提なので、この順のまま使う）
-  const picked = [...tagged, ...untagged].slice(0, limit);
-  return picked;
+  return [...tagged, ...untagged].slice(0, limit);
 }
 
 // d1.ts の MusicRow と同じ形（循環 import を避けるための構造的な最小限）。

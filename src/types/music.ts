@@ -6,6 +6,3 @@ export interface MusicUrlRecord {
   dopamine?: number;
   [key: string]: unknown;
 }
-
-// 受信生データ（どのフィールドも省略され得る場合の型）
-export type MusicUrlResponseItem = Partial<MusicUrlRecord> & Record<string, unknown>;

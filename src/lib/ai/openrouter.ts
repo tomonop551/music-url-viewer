@@ -76,7 +76,7 @@ export async function callOpenRouter<T>(
   }
 
   const content = data.choices[0].message.content;
-  if (typeof content !== "string" || content === "") {
+  if (content === null || content === "") {
     return { ok: false, error: "OpenRouter の応答が空です" };
   }
 

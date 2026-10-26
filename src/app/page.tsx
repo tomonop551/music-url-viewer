@@ -1,24 +1,13 @@
 import { jstDateKey } from "@/lib/catalog/daily-pick";
-import type { MusicRow } from "@/lib/catalog/catalog";
+import { toRecord } from "@/lib/catalog/catalog";
 import { loadDailyPick, loadMusicPage } from "@/lib/catalog/source";
 import { MusicList } from "@/components/MusicList";
 import { TodayPick } from "@/components/TodayPick";
-import type { MusicUrlRecord } from "@/types/music";
 
 export const dynamic = "force-dynamic";
 
 // ISR（Incremental Static Regeneration）: 1 日 = 86400 秒
 export const revalidate = 86400;
-
-function toRecord(row: MusicRow): MusicUrlRecord {
-  return {
-    message_id: row.message_id,
-    url: row.url,
-    timestamp: row.timestamp,
-    ...(row.title ? { title: row.title } : {}),
-    ...(row.dopamine !== undefined ? { dopamine: row.dopamine } : {}),
-  };
-}
 
 // 検索語とページ番号は URL（?q=&page=）に載せ、絞り込みは D1 側で行う。
 // 一覧は常に 1 ページ分だけを取るので、件数が増えても取得量は一定。

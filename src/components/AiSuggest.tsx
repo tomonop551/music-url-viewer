@@ -34,12 +34,12 @@ export function AiSuggest({ onPick, urlById, titleById }: AiSuggestProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ theme: theme.trim() }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { error?: string; suggestions?: Suggestion[] };
       if (!res.ok) {
         setError(data.error ?? "提案の取得に失敗しました");
         return;
       }
-      setSuggestions(data.suggestions as Suggestion[]);
+      setSuggestions(data.suggestions ?? []);
     } catch {
       setError("通信に失敗しました");
     } finally {
