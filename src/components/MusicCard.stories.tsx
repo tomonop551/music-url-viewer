@@ -69,3 +69,24 @@ export const LongPlaylist: Story = {
     },
   },
 };
+
+// 暗色バリアント。テーマクラスは layout.tsx のスクリプトが <html> に当てるものなので、
+// スタンドアロンのストーリーではラッパーに .dark を直接付けて疑似する。
+export const Dark: Story = {
+  decorators: [
+    (Story) => (
+      <div className="dark min-h-screen bg-bg">
+        <Story />
+      </div>
+    ),
+  ],
+  args: {
+    item: {
+      message_id: "6",
+      url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      title: "ハイメンテナンスガール",
+      timestamp: "2026-09-16T13:55:02.000000+00:00",
+      dopamine: 8,
+    },
+  },
+};

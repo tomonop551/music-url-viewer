@@ -65,3 +65,24 @@ export const LongTitle: Story = {
     },
   },
 };
+
+// 暗色バリアント。テーマクラスは layout.tsx のスクリプトが <html> に当てるものなので、
+// スタンドアロンのストーリーではラッパーに .dark を直接付けて疑似する。
+export const Dark: Story = {
+  decorators: [
+    (Story) => (
+      <div className="dark min-h-screen bg-bg">
+        <Story />
+      </div>
+    ),
+  ],
+  args: {
+    item: {
+      message_id: "5",
+      url: "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
+      title: "Awesome Spotify Track",
+      timestamp: "2026-09-10T09:15:00.000000+00:00",
+      dopamine: 5,
+    },
+  },
+};

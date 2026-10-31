@@ -48,7 +48,7 @@ export function AiSuggest({ onPick, urlById, titleById }: AiSuggestProps) {
   };
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
       <div className="flex items-center gap-2">
         <input
           type="text"
@@ -61,7 +61,7 @@ export function AiSuggest({ onPick, urlById, titleById }: AiSuggestProps) {
             if (e.key === "Enter") suggest();
           }}
           placeholder="テーマを入力（例: 雨の日に聴きたい）"
-          className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+          className="flex-1 rounded-xl border border-border-strong px-3 py-2 text-sm text-fg outline-none placeholder:text-fg-subtle focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
         />
         <button
           type="button"
@@ -69,7 +69,7 @@ export function AiSuggest({ onPick, urlById, titleById }: AiSuggestProps) {
           disabled={busy || theme.trim() === ""}
           className={`shrink-0 rounded-xl px-4 py-2 text-sm font-semibold transition ${
             busy || theme.trim() === ""
-              ? "cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400"
+              ? "cursor-not-allowed border border-border bg-surface-muted text-fg-subtle"
               : "bg-purple-600 text-white hover:bg-purple-700"
           }`}
         >
@@ -77,34 +77,34 @@ export function AiSuggest({ onPick, urlById, titleById }: AiSuggestProps) {
         </button>
       </div>
 
-      {error && <p className="mt-2 text-xs text-red-700">{error}</p>}
+      {error && <p className="mt-2 text-xs text-red-700 dark:text-red-400">{error}</p>}
 
       {suggestions && (
         <ul className="mt-3 space-y-2">
           {suggestions.length === 0 && (
-            <li className="text-xs text-gray-600">提案できる曲が見つかりませんでした。</li>
+            <li className="text-xs text-fg-muted">提案できる曲が見つかりませんでした。</li>
           )}
           {suggestions.map((s) => (
             <li
               key={s.message_id}
-              className="flex items-center justify-between gap-2 rounded-lg bg-gray-50 px-3 py-2"
+              className="flex items-center justify-between gap-2 rounded-lg bg-surface-muted px-3 py-2"
             >
               <div className="min-w-0">
                 <a
                   href={urlById[s.message_id]}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block truncate text-sm font-medium text-gray-900 hover:text-blue-700 hover:underline"
+                  className="block truncate text-sm font-medium text-fg hover:text-accent hover:underline"
                 >
                   {titleById[s.message_id] ?? "(無題)"}
                 </a>
-                <p className="mt-0.5 text-xs text-gray-600">{s.reason}</p>
+                <p className="mt-0.5 text-xs text-fg-muted">{s.reason}</p>
               </div>
               {onPick && (
                 <button
                   type="button"
                   onClick={() => onPick(s.message_id)}
-                  className="shrink-0 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs text-gray-700 transition hover:bg-gray-50"
+                  className="shrink-0 rounded-lg border border-border-strong bg-surface px-2.5 py-1 text-xs text-fg-muted transition hover:bg-surface-muted"
                 >
                   選択に加える
                 </button>

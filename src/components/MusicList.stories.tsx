@@ -104,3 +104,20 @@ export const NoResults: Story = {
     lastPage: 1,
   },
 };
+
+// 暗色バリアント。テーマクラスは layout.tsx のスクリプトが <html> に当てるものなので、
+// スタンドアロンのストーリーではラッパーに .dark を直接付けて疑似する。
+export const Dark: Story = {
+  decorators: [
+    (Story) => (
+      <div className="dark min-h-screen bg-bg">
+        <Story />
+      </div>
+    ),
+  ],
+  args: {
+    items: mockUrls,
+    total: mockUrls.length,
+    lastPage: 1,
+  },
+};

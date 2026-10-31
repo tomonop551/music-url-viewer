@@ -7,6 +7,7 @@ import { countInPage, deselectMany, selectMany, toggleSelection } from "@/lib/pl
 import { AiSuggest } from "./AiSuggest";
 import { PageNav } from "./PageNav";
 import { EmptyState } from "./EmptyState";
+import { ThemeToggle } from "./ThemeToggle";
 import {
   clearStoredSelection,
   loadSelectedRecordsMap,
@@ -123,44 +124,47 @@ export function PlaylistSelector({
   return (
     <>
       {/* 件数が増えると検索欄が画面外へ流れるため、追従させて常に手の届く位置に置く */}
-      <header className="sticky top-0 z-10 mb-6 border-b border-gray-200/80 bg-gray-50/90 py-4 backdrop-blur-sm">
+      <header className="sticky top-0 z-10 mb-6 border-b border-border/80 bg-bg/90 py-4 backdrop-blur-sm">
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+            <h1 className="text-2xl font-bold tracking-tight text-fg sm:text-3xl">
               プレイリストを作る
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-fg-muted">
               {countLabel} · 選択 {selected.size} 件
             </p>
           </div>
 
-          {/* 素の GET フォームなので JS 無しでも送信できる（送信するとページ番号は 1 に戻る） */}
-          <form
-            action="/playlists"
-            method="get"
-            role="search"
-            className="flex w-full items-center gap-2 sm:w-auto"
-          >
-            <div className="relative flex-1 sm:w-64">
-              <label htmlFor="playlist-search" className="sr-only">
-                タイトルまたはURLで検索
-              </label>
-              <input
-                id="playlist-search"
-                type="search"
-                name="q"
-                defaultValue={query}
-                placeholder="タイトル・URLで検索"
-                className="w-full rounded-xl border border-gray-300 bg-white py-2.5 pr-3 pl-3 text-sm text-gray-900 shadow-sm transition outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-              />
-            </div>
-            <button
-              type="submit"
-              className="shrink-0 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+          {/* ヘッダー右端の固まり。検索フォーム（素の GET、JS 無しでも送信できる）とテーマ切替を並べる */}
+          <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+            <form
+              action="/playlists"
+              method="get"
+              role="search"
+              className="flex w-full items-center gap-2 sm:w-auto"
             >
-              検索
-            </button>
-          </form>
+              <div className="relative flex-1 sm:w-64">
+                <label htmlFor="playlist-search" className="sr-only">
+                  タイトルまたはURLで検索
+                </label>
+                <input
+                  id="playlist-search"
+                  type="search"
+                  name="q"
+                  defaultValue={query}
+                  placeholder="タイトル・URLで検索"
+                  className="w-full rounded-xl border border-border-strong bg-surface py-2.5 pr-3 pl-3 text-sm text-fg shadow-sm transition outline-none placeholder:text-fg-subtle focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                />
+              </div>
+              <button
+                type="submit"
+                className="shrink-0 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                検索
+              </button>
+            </form>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
@@ -172,7 +176,7 @@ export function PlaylistSelector({
             <button
               type="button"
               onClick={toggleAll}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-50"
+              className="rounded-lg border border-border-strong bg-surface px-3 py-1.5 text-sm text-fg-muted transition hover:bg-surface-muted"
             >
               {allSelected ? "全解除" : "全選択"}
             </button>
@@ -182,7 +186,7 @@ export function PlaylistSelector({
               disabled={selected.size === 0}
               className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
                 selected.size === 0
-                  ? "cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400"
+                  ? "cursor-not-allowed border border-border bg-surface-muted text-fg-subtle"
                   : "bg-blue-600 text-white hover:bg-blue-700"
               }`}
             >
@@ -201,7 +205,7 @@ export function PlaylistSelector({
           </div>
           {/* 選択不可の内訳。実測（223 件）では理由は 2 種類に収まるため、件数とその内訳だけを見せる */}
           {unusable.length > 0 && (
-            <p className="mt-4 text-xs text-gray-600">
+            <p className="mt-4 text-xs text-fg-muted">
               選べない URL が {unusable.length} 件あります（
               {[...reasonDist.entries()].map(([reason, n]) => `${reason} ${n} 件`).join("・")}）
             </p>
@@ -247,7 +251,7 @@ function PlaylistCard({ item, selected, onToggle }: PlaylistCardProps) {
           onChange={onToggle}
           disabled={!selectable}
           title={reason ?? undefined}
-          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-200"
+          className="h-4 w-4 rounded border-border-strong text-blue-600 focus:ring-blue-200"
         />
         <span className="sr-only">選択</span>
       </label>
@@ -256,7 +260,9 @@ function PlaylistCard({ item, selected, onToggle }: PlaylistCardProps) {
           <MusicCard item={item} />
         </div>
         {!selectable && reason && (
-          <p className="mt-1 break-words px-1 text-[11px] text-amber-800">{reason}</p>
+          <p className="mt-1 break-words px-1 text-[11px] text-amber-800 dark:text-amber-300">
+            {reason}
+          </p>
         )}
       </div>
     </div>

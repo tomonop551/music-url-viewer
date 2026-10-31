@@ -10,8 +10,8 @@ function pageHref(base: string, query: string, target: number): string {
 }
 
 const pageLinkClass =
-  "rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 transition hover:bg-gray-50";
-const pageDisabledClass = "rounded-lg border border-gray-200 px-3 py-2 text-gray-400";
+  "rounded-lg border border-border-strong bg-surface px-3 py-2 text-fg-muted transition hover:bg-surface-muted";
+const pageDisabledClass = "rounded-lg border border-border px-3 py-2 text-fg-subtle";
 
 interface PageNavProps {
   // ベースのパス（"/" または "/playlists"）
@@ -34,7 +34,7 @@ export function PageNav({ base, query, page, lastPage }: PageNavProps) {
       ) : (
         <span className={pageDisabledClass}>前へ</span>
       )}
-      <span className="tabular-nums text-gray-600">
+      <span className="tabular-nums text-fg-muted">
         {page} / {lastPage} ページ
       </span>
       {page < lastPage ? (

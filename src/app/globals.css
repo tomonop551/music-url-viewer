@@ -1,16 +1,43 @@
 @import "tailwindcss";
 
+/* dark: は <html> の .dark クラスに追従させる。未定義だと prefers-color-scheme 追従になる。 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-/* 明色テーマで固定する。OS がダークモードのときブラウザが入力欄を自動で暗転させ、
-   白背景のカード上で文字が読めなくなるのを防ぐ。 */
+/* 面・文字・境界・アクセントのセマンティックトークン。
+   暗色の値は light-dark() の第2引数に同じ箇所で置き、used color-scheme で選ばせる。
+   コンポーネント側はトークンだけ参照すればよく、暗色の調整はここ 1 箇所で済む。 */
+@theme {
+  --color-bg: light-dark(#f9fafb, #111827);
+  --color-surface: light-dark(#ffffff, #1f2937);
+  --color-surface-muted: light-dark(#f3f4f6, #374151);
+  --color-fg: light-dark(#111827, #f9fafb);
+  --color-fg-muted: light-dark(#4b5563, #d1d5db);
+  --color-fg-subtle: #9ca3af;
+  --color-border: light-dark(#e5e7eb, #374151);
+  --color-border-strong: light-dark(#d1d5db, #4b5563);
+  --color-accent: light-dark(#1d4ed8, #93c5fd);
+}
+
 :root {
-  color-scheme: light;
+  /* クラス未決定（JS 無効）のときの既定は「システムに合わせる」。
+     layout.tsx のインラインスクリプトが描画前に .light / .dark のどちらかを必ず当てるため、
+     この値がそのまま使われるのは JS 無効のクライアントだけになる。 */
+  color-scheme: light dark;
   /* 追従するヘッダーのぶん下げて、Tab 移動でカードに当たったとき隠れないようにする */
   scroll-padding-top: 6rem;
+}
+
+.light {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
 }
 
 /* 本文は日本語を含むため、和文フォントを明示して OS ごとの字面のばらつきを抑える。 */
@@ -18,6 +45,6 @@ body {
   font-family:
     var(--font-geist-sans), "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", Meiryo,
     sans-serif;
-  background-color: #f9fafb;
-  color: #111827;
+  background-color: var(--color-bg);
+  color: var(--color-fg);
 }
