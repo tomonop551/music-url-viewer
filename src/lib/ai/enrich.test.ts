@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { parseAiTags, buildEnrichPrompt, pickEnrichTargets } from "./enrich";
+import { aiTagsSchema, buildEnrichPrompt, pickEnrichTargets } from "./enrich";
 
 // AI の出力は境界値。schema 通りの形しか保存しない（壊れた行で DB を汚さないため）。
 describe("AI 出力の検証", () => {
   it("正常な応答を受け入れる", () => {
-    const tags = parseAiTags({
+    const tags = aiTagsSchema.parse({
       artist: "花譜",
       genres: ["J-POP", "電子音楽"],
       moods: ["切ない", "中毒性"],
@@ -18,13 +18,13 @@ describe("AI 出力の検証", () => {
 
   it("範囲外の ai_dopamine は未評価（undefined）に倒す", () => {
     for (const v of [-1, 11, "7", Number.NaN]) {
-      const tags = parseAiTags({ ai_dopamine: v });
+      const tags = aiTagsSchema.parse({ ai_dopamine: v });
       expect(tags.ai_dopamine).toBeUndefined();
     }
   });
 
   it("配列でない genres 等は空配列に倒す", () => {
-    const tags = parseAiTags({ genres: "J-POP", moods: 42 });
+    const tags = aiTagsSchema.parse({ genres: "J-POP", moods: 42 });
     expect(tags.genres).toEqual([]);
     expect(tags.moods).toEqual([]);
   });

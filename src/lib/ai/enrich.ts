@@ -33,12 +33,6 @@ export const aiTagsSchema = z.object({
   ai_dopamine: optionalDopamine,
 });
 
-export type AiTags = z.infer<typeof aiTagsSchema>;
-
-export function parseAiTags(value: unknown): AiTags {
-  return aiTagsSchema.parse(value);
-}
-
 // 提案（#24）の応答。message_id と reason の配列。候補外の id は route 側で落とす。
 export const suggestionsSchema = z.object({
   recommendations: z

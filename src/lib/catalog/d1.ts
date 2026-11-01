@@ -196,18 +196,6 @@ export async function incrementAiBudget(db: D1Database, day: string): Promise<nu
   return row?.count ?? 1;
 }
 
-// 指定した曲のタグを1件だけ読む（個別の参照に使う）。無ければ null。
-export async function getAiTags(db: D1Database, messageId: string): Promise<AiTagRow | null> {
-  const row = await db
-    .prepare(
-      `SELECT message_id, artist, genres, moods, languages, era, ai_dopamine, model, created_at, input_fingerprint
-         FROM music_ai_tags WHERE message_id = ?`,
-    )
-    .bind(messageId)
-    .first<Record<string, unknown>>();
-  return row ? rowToAiTag(row) : null;
-}
-
 // タグの一括取得。候補の組み立てで曲ごとに D1 を叩かないため
 // （ Workers のサブリクエスト上限があり、曲数分のクエリは上限を超える）。
 export async function getAiTagsMap(
