@@ -1,3 +1,4 @@
+import ky, { HTTPError, KyError } from "ky";
 import { z } from "zod";
 
 // OpenRouter の chat completions API。JSON schema での structured outputs を要求する。
@@ -39,38 +40,47 @@ export async function callOpenRouter<T>(
   schema: object,
   contentSchema: z.ZodType<T>,
 ): Promise<{ ok: true; data: T } | { ok: false; error: string; status?: number }> {
-  let res: Response;
+  let json: unknown;
   try {
-    res = await fetch(OPENROUTER_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${opts.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: opts.model,
-        messages: [{ role: "user", content: opts.prompt }],
-        response_format: {
-          type: "json_schema",
-          json_schema: { name: schemaName, strict: true, schema },
+    json = await ky
+      .post(OPENROUTER_URL, {
+        headers: { Authorization: `Bearer ${opts.apiKey}` },
+        json: {
+          model: opts.model,
+          messages: [{ role: "user", content: opts.prompt }],
+          response_format: {
+            type: "json_schema",
+            json_schema: { name: schemaName, strict: true, schema },
+          },
+          // structured outputs 非対応の provider へのルーティングを避ける
+          // （schema を無視した自由文の応答が返るのを防ぐため）
+          provider: { require_parameters: true },
         },
-        // structured outputs 非対応の provider へのルーティングを避ける
-        // （schema を無視した自由文の応答が返るのを防ぐため）
-        provider: { require_parameters: true },
-      }),
-      signal: AbortSignal.timeout(opts.timeoutMs ?? 30_000),
-    });
-  } catch {
-    return { ok: false, error: "OpenRouter への接続に失敗しました" };
-  }
-
-  if (!res.ok) {
-    return { ok: false, error: "OpenRouter がエラーを返しました", status: res.status };
+        retry: 0,
+        // 旧 AbortSignal.timeout 相当の「送信開始からの合計上限」は totalTimeout が持つ
+        // （応答本文の読み取り込みで打ち切られる）。per-attempt 既定 10s が先に発火して
+        // 30s を早期失敗させないため timeout は無効化する（retry: 0 なので試行は 1 回）。
+        timeout: false,
+        totalTimeout: opts.timeoutMs ?? 30_000,
+      })
+      .json();
+  } catch (error) {
+    // 非 2xx は HTTPError として throw される（status はそのまま返し、呼び出し側が 502 に折り返す）。
+    if (error instanceof HTTPError) {
+      return { ok: false, error: "OpenRouter がエラーを返しました", status: error.response.status };
+    }
+    // TimeoutError・NetworkError など、応答を得られなかった ky の失敗
+    // （旧実装の fetch 例外・AbortSignal 打ち切りと同じ「接続に失敗」経路）。
+    if (error instanceof KyError) {
+      return { ok: false, error: "OpenRouter への接続に失敗しました" };
+    }
+    // 2xx なのに JSON パースに失敗したケース（素の SyntaxError がそのまま出る）。
+    return { ok: false, error: "OpenRouter の応答を解釈できません" };
   }
 
   let data: OpenRouterResponse;
   try {
-    data = chatCompletionSchema.parse(await res.json());
+    data = chatCompletionSchema.parse(json);
   } catch {
     return { ok: false, error: "OpenRouter の応答を解釈できません" };
   }
