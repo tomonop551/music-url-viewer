@@ -13,10 +13,8 @@ export function proxy(request: NextRequest) {
   }
 
   const authorization = request.headers.get("authorization") ?? "";
-  const [scheme, token] = authorization.split(" ");
-  const valid = scheme === "Basic" && atob(token ?? "") === `${user}:${pass}`;
 
-  if (!valid) {
+  if (!isAuthorized(authorization, `${user}:${pass}`)) {
     return new NextResponse("Unauthorized", {
       status: 401,
       headers: { "WWW-Authenticate": 'Basic realm="music-url-viewer"' },
@@ -24,6 +22,25 @@ export function proxy(request: NextRequest) {
   }
 
   return NextResponse.next();
+}
+
+// 認証失败は例外ではなく false で返す。atob は不正 base64 で DOMException を
+// throw するため（例: `Authorization: Basic ***`）、無ガードだと本来 401 の
+// 入力が 500 になり、認証ゲート自体が落ちる。
+// 定数時間比較（timingSafeEqual）は入れていない: proxy の実行環境（Edge/OpenNext）で
+// node:crypto に依存できる保証が無いこと、タイミング攻撃はこのゲートの具体的な失敗
+// モデル外のため、AGENTS.md の「推測的セキュリティのエッジケースの複雑化禁止」に従う。
+function isAuthorized(authorization: string, expected: string): boolean {
+  const [scheme, token] = authorization.split(" ");
+  if (scheme !== "Basic" || !token) return false;
+
+  let decoded: string;
+  try {
+    decoded = atob(token);
+  } catch {
+    return false;
+  }
+  return decoded === expected;
 }
 
 export const config = {

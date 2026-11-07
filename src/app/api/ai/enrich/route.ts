@@ -74,8 +74,17 @@ export async function POST(request: Request) {
   const parsed = bodySchema.safeParse(body);
   const limit = parsed.success ? parsed.data.limit : 10;
 
-  // 濃縮の対象は title のある行だけ。新しい順に上限件数まで処理する
-  const allRows = await getMusicRows(db);
+  // 全行の読み出しが throw しても 500 にはしない。この時点で消費した予算カウントは
+  // 戻らないため、0 件＋理由を 200 で返して呼び出し側に成否を判れせる。
+  const allRows = await getMusicRows(db).catch(() => undefined);
+  if (allRows === undefined) {
+    return NextResponse.json({
+      processed: 0,
+      ok: 0,
+      results: [],
+      error: "カタログの読み込みに失敗しました",
+    });
+  }
   const targets = pickEnrichTargets(allRows).slice(0, limit);
 
   const results: EnrichResult[] = [];
@@ -96,14 +105,24 @@ export async function POST(request: Request) {
       continue;
     }
 
-    await upsertAiTags(db, {
+    // 書き込みの D1 例外で行ごと {ok:false, error} に折り込む。ここで throw して
+    // 全体 500 にすると、この回で成功した行の書き込みと AI コストがまとめて無駄に
+    // なる（再実行は先頭から組み直されるため）。
+    const stored = await upsertAiTags(db, {
       message_id: row.message_id,
       ...res.data,
       model,
       created_at: new Date().toISOString(),
       input_fingerprint: fingerprint,
-    });
-    results.push({ message_id: row.message_id, ok: true });
+    }).then(
+      () => true,
+      () => false,
+    );
+    results.push(
+      stored
+        ? { message_id: row.message_id, ok: true }
+        : { message_id: row.message_id, ok: false, error: "タグの保存に失敗しました" },
+    );
   }
 
   const okCount = results.filter((r) => r.ok).length;
