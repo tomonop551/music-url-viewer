@@ -1,5 +1,6 @@
 "use client";
 
+import ky, { HTTPError, KyError } from "ky";
 import { useState } from "react";
 
 interface Suggestion {
@@ -29,18 +30,30 @@ export function AiSuggest({ onPick, urlById, titleById }: AiSuggestProps) {
     setError(null);
     setSuggestions(null);
     try {
-      const res = await fetch("/api/ai/suggest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ theme: theme.trim() }),
-      });
-      const data = (await res.json()) as { error?: string; suggestions?: Suggestion[] };
-      if (!res.ok) {
-        setError(data.error ?? "提案の取得に失敗しました");
+      const data = await ky
+        .post("/api/ai/suggest", {
+          json: { theme: theme.trim() },
+          // 提案はユーザーが待ち受ける操作。失敗時の自動再送で待たせるより即失敗を返す
+          retry: 0,
+          // 旧実装（素の fetch）にタイムアウトは無かったため維持して無効化する
+          timeout: false,
+        })
+        .json<{ error?: string; suggestions?: Suggestion[] }>();
+      setSuggestions(data.suggestions ?? []);
+    } catch (error) {
+      // 非 2xx は HTTPError。route が返す {error} JSON ボディは ky が事前パースして
+      // error.data に入っている（本文は消費済みで response.json() は使えない）。
+      if (error instanceof HTTPError) {
+        const body = error.data as { error?: string } | string | undefined;
+        setError(typeof body === "object" && body?.error ? body.error : "提案の取得に失敗しました");
         return;
       }
-      setSuggestions(data.suggestions ?? []);
-    } catch {
+      // タイムアウト・ネットワーク断など応答が無い失敗（KyError のサブクラス）。
+      if (error instanceof KyError) {
+        setError("通信に失敗しました");
+        return;
+      }
+      // 2xx なのに JSON が壊れていたケースは通信の失敗として扱う。
       setError("通信に失敗しました");
     } finally {
       setBusy(false);
