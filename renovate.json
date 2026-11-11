@@ -1,42 +1,25 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    ":timezone(Asia/Tokyo)",
-    "helpers:pinGitHubActionDigests"
-  ],
+  "extends": ["config:recommended", ":timezone(Asia/Tokyo)", "helpers:pinGitHubActionDigests"],
   "dependencyDashboard": true,
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": [
-      "* * * * 4,5,6"
-    ]
+    "schedule": ["* * * * 4,5,6"]
   },
   "osvVulnerabilityAlerts": true,
   "packageRules": [
     {
       "groupName": "storybook",
-      "matchPackageNames": [
-        "storybook",
-        "@storybook/{/,}**",
-        "@chromatic-com/storybook"
-      ]
+      "matchPackageNames": ["storybook", "@storybook/{/,}**", "@chromatic-com/storybook"]
     },
     {
       "groupName": "vitest",
-      "matchPackageNames": [
-        "vitest",
-        "@vitest/{/,}**"
-      ]
+      "matchPackageNames": ["vitest", "@vitest/{/,}**"]
     },
     {
       "groupName": "types",
-      "matchPackageNames": [
-        "@types/{/,}**"
-      ]
+      "matchPackageNames": ["@types/{/,}**"]
     }
   ],
-  "schedule": [
-    "* * * * 4,5,6"
-  ]
+  "schedule": ["* * * * 4,5,6"]
 }
