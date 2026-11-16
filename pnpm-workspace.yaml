@@ -4,6 +4,8 @@ onlyBuiltDependencies:
   - workerd
 
 allowBuilds:
+  # Git フックは mise run hooks:install で明示的に導入する。
+  "lefthook": false
   "sharp": true
   "unrs-resolver": true
   "esbuild": true
