@@ -5,7 +5,7 @@ A modern, high-performance web application built with Next.js to display music U
 ## Features
 
 - **Server-Side Rendering (SSR)**: Securely fetches data from Cloudflare D1 without exposing credentials to the client.
-- **Incremental Static Regeneration (ISR)**: Cached for 24 hours for fast performance.
+- **Dynamic rendering**: `/` と `/playlists` は毎回サーバーでレンダリングする（`force-dynamic`）。一覧は 1 ページ分＋件数だけを D1 から読むため、件数が増えても取得量は一定。「今日の一曲」はリクエスト時の JST 日付で選ぶため、静的キャッシュ（ISR）は意図的に使わない。
 - **Modern UI**: Clean, responsive card-based layout built with Tailwind CSS.
 - **Auto-Sorting**: Automatically sorts entries by timestamp in descending order.
 - **Playlist selection**: `/playlists` で曲を選び、CSV として書き出せる（詳細は下記）。

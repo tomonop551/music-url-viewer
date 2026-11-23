@@ -4,10 +4,11 @@ import { loadDailyPick, loadMusicPage } from "@/lib/catalog/source";
 import { MusicList } from "@/components/MusicList";
 import { TodayPick } from "@/components/TodayPick";
 
+// 毎回サーバーでレンダリングする。`revalidate` を併存させない:
+// 「今日の一曲」はリクエスト時のサーバ時刻から JST 日付キーを求めて選ぶため、
+// 静的キャッシュは生成時刻の dateKey を固定してしまい日付を跨いでも曲が変わらない。
+// （force-dynamic と revalidate は両立せず、前者が優先されて revalidate は無視される）
 export const dynamic = "force-dynamic";
-
-// ISR（Incremental Static Regeneration）: 1 日 = 86400 秒
-export const revalidate = 86400;
 
 // 検索語とページ番号は URL（?q=&page=）に載せ、絞り込みは D1 側で行う。
 // 一覧は常に 1 ページ分だけを取るので、件数が増えても取得量は一定。
