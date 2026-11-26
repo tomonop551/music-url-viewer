@@ -7,8 +7,8 @@
 ## 1. セットアップ
 
 ```bash
-mise install        # Node / pnpm / wrangler を mise.toml に従って用意
-mise run install    # pnpm install（= pnpm install）
+mise install        # Node / pnpm を mise.toml に従って用意
+mise run install    # pnpm install（= pnpm install。wrangler もここで node_modules に入る）
 cp .env.example .env
 ```
 
